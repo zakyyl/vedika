@@ -2,6 +2,7 @@
 
     use App\Http\Controllers\ProfileController;
     use Illuminate\Support\Facades\Route;
+    use Illuminate\Support\Facades\Auth;
 
     use App\Http\Controllers\AuthController;
     use App\Http\Controllers\RegisterController;
@@ -10,9 +11,11 @@
     use App\Http\Controllers\RawatInapController;
 
 
-    Route::get('/', function () {
-        return view('welcome');
-    });
+Route::get('/', function () {
+    return auth()->check()
+        ? redirect()->route('dashboard')
+        : redirect()->route('login');
+});
 
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
     Route::post('/register', [RegisterController::class, 'register'])->name('register.attempt');
@@ -44,6 +47,7 @@ Route::post('/rawatinap/{no_rawat}/upload-resume', [RawatInapController::class, 
     ->name('rawatinap.upload_resume');
 
     Route::put('/rawatinap/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatinap.update_status');
+    Route::put('/rawatjalan/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatjalan.update_status');
 
 
     Route::middleware('auth')->group(function () {

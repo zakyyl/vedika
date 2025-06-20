@@ -78,7 +78,7 @@
 
     {{-- Pagination --}}
     <div class="d-flex justify-content-center my-3">
-      {{ $rawatJalan->links('pagination::bootstrap-5') }}
+      {{ $rawatJalan->links() }}
     </div>
   </div>
 </div>
