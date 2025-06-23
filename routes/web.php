@@ -9,13 +9,14 @@
 
     use App\Http\Controllers\RawatJalanController;
     use App\Http\Controllers\RawatInapController;
+    use App\Http\Controllers\DashboardController;
 
 
-Route::get('/', function () {
-    return auth()->check()
-        ? redirect()->route('dashboard')
-        : redirect()->route('login');
-});
+    Route::get('/', function () {
+        return auth()->check()
+            ? redirect()->route('dashboard')
+            : redirect()->route('login');
+    });
 
     Route::get('/register', [RegisterController::class, 'show'])->name('register');
     Route::post('/register', [RegisterController::class, 'register'])->name('register.attempt');
@@ -31,28 +32,43 @@ Route::get('/', function () {
     Route::get('/rawatjalan', [RawatJalanController::class, 'index'])->name('rawatjalan.index');
     Route::get('/rawatinap', [RawatInapController::class, 'index'])->name('rawatinap.index');
 
-    // Route::get('/rawatjalan/detail/{no_rawat}', [RawatJalanController::class, 'detail'])->name('rawatjalan.detail');
     Route::get('/rawatjalan/detail/{no_rawat}', [RawatJalanController::class, 'detail'])
-    ->where('no_rawat', '.*')
-    ->name('rawatjalan.detail');
+        ->where('no_rawat', '.*')
+        ->name('rawatjalan.detail');
     Route::get('/rawatinap/detail/{no_rawat}', [RawatInapController::class, 'detail'])
-    ->where('no_rawat', '.*')
-    ->name('rawatinap.detail');
+        ->where('no_rawat', '.*')
+        ->name('rawatinap.detail');
 
-Route::post('/rawatjalan/{no_rawat}/upload-resume', [RawatJalanController::class, 'uploadResume'])
-    ->where('no_rawat', '.*') 
-    ->name('rawatjalan.upload_resume');
-Route::post('/rawatinap/{no_rawat}/upload-resume', [RawatInapController::class, 'uploadResume'])
-    ->where('no_rawat', '.*') 
-    ->name('rawatinap.upload_resume');
+    Route::post('/rawatjalan/{no_rawat}/upload-resume', [RawatJalanController::class, 'uploadResume'])
+        ->where('no_rawat', '.*')
+        ->name('rawatjalan.upload_resume');
+    Route::post('/rawatinap/{no_rawat}/upload-resume', [RawatInapController::class, 'uploadResume'])
+        ->where('no_rawat', '.*')
+        ->name('rawatinap.upload_resume');
 
     Route::put('/rawatinap/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatinap.update_status');
     Route::put('/rawatjalan/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatjalan.update_status');
 
+    Route::get('/statusklaim/{no_rawat}', [RawatInapController::class, 'lihatResume'])
+        ->where('no_rawat', '.*')
+        ->name('statusklaim.index');
+
+    Route::get('/statusklaim/{no_rawat}', [RawatJalanController::class, 'lihatResume'])
+        ->where('no_rawat', '.*')
+        ->name('statusklaim.index');
+
+    Route::get('/rawatjalan/{no_rawat}/pemeriksaan', [RawatJalanController::class, 'lihatPemeriksaan'])
+        ->where('no_rawat', '.*')
+        ->name('rawatjalan.pemeriksaan');
+
+    Route::get('/rawatranap/{no_rawat}/pemeriksaan', [RawatInapController::class,  'lihatPemeriksaan'])
+        ->where('no_rawat', '.*')
+        ->name('rawatinap.pemeriksaan');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
         Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
-
