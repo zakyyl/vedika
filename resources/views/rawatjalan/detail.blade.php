@@ -60,7 +60,7 @@
                                     <button type="submit" class="btn btn-primary rounded-pill px-4">
                                         Upload
                                     </button>
-                                    <a href="{{ route('statusklaim.index', ['no_rawat' => $data->no_rawat]) }}"
+                                    <a href="{{ route('rawatjalan.statusklaim', ['no_rawat' => $data->no_rawat]) }}"
                                         class="btn btn-outline-info rounded-pill">
                                         Lihat Resume Diupload &rarr;
                                     </a>

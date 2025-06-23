@@ -1,8 +1,8 @@
-{{-- @extends('layouts.materio')
+@extends('layouts.materio')
 
 @section('content')
     <div class="container mt-4">
-        <h4 class="mb-4 fw-bold">Daftar Resume yang Sudah Diupload Rawat Jalan</h4>
+        <h4 class="mb-4 fw-bold">Daftar Resume yang Sudah Diupload Rawat Inap</h4>
 
         @if ($berkas->isEmpty())
             <div class="alert alert-warning">
@@ -28,7 +28,7 @@
         @endif
 
         <a href="{{ route('rawatinap.detail', $no_rawat) }}" class="btn btn-outline-secondary rounded-pill mt-3">
-            &larr; Kembali ke Detail Rawat Jalan
+            &larr; Kembali ke Detail Rawat Inap
         </a>
     </div>
-@endsection --}}
+@endsection

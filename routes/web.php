@@ -51,11 +51,11 @@
 
     Route::get('/statusklaim/{no_rawat}', [RawatInapController::class, 'lihatResume'])
         ->where('no_rawat', '.*')
-        ->name('statusklaim.index');
+        ->name('rawatinap.statusklaim');
 
     Route::get('/statusklaim/{no_rawat}', [RawatJalanController::class, 'lihatResume'])
         ->where('no_rawat', '.*')
-        ->name('statusklaim.index');
+        ->name('rawatjalan.statusklaim');
 
     Route::get('/rawatjalan/{no_rawat}/pemeriksaan', [RawatJalanController::class, 'lihatPemeriksaan'])
         ->where('no_rawat', '.*')

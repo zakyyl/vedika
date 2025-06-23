@@ -57,7 +57,7 @@
 
                                 <div class="d-flex justify-content-between">
                                     <button type="submit" class="btn btn-primary rounded-pill px-4">Upload</button>
-                                    <a href="{{ route('statusklaim.index', ['no_rawat' => $data->no_rawat]) }}"
+                                    <a href="{{ route('rawatinap.statusklaim', ['no_rawat' => $data->no_rawat]) }}"
                                         class="btn btn-outline-info rounded-pill">
                                         Lihat Resume Diupload &rarr;
                                     </a>

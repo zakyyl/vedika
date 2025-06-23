@@ -134,7 +134,7 @@ class RawatInapController extends Controller
                     throw new \Exception('File gagal disimpan ke storage');
                 }
 
-                
+
                 Log::info('File uploaded successfully', [
                     'filename' => $filename,
                     'path' => $path,
@@ -205,7 +205,7 @@ class RawatInapController extends Controller
             ->select('berkas_digital_perawatan.*', 'master_berkas_digital.nama as nama_kategori')
             ->get();
 
-        return view('statusklaimranap.index', compact('berkas', 'no_rawat'));
+        return view('rawatinap.statusklaim', compact('berkas', 'no_rawat'));
     }
     public function lihatPemeriksaan($no_rawat)
     {

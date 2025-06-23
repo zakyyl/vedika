@@ -163,7 +163,7 @@ class RawatJalanController extends Controller
             ->select('berkas_digital_perawatan.*', 'master_berkas_digital.nama as nama_kategori')
             ->get();
 
-        return view('statusklaimrajal.index', compact('berkas', 'no_rawat'));
+        return view('rawatjalan.statusklaim', compact('berkas', 'no_rawat'));
     }
 
     public function lihatPemeriksaan($no_rawat)

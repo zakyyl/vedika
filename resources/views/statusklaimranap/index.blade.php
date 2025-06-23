@@ -1,4 +1,4 @@
-@extends('layouts.materio')
+{{-- @extends('layouts.materio')
 
 @section('content')
     <div class="container mt-4">
@@ -31,4 +31,4 @@
             &larr; Kembali ke Detail Rawat Inap
         </a>
     </div>
-@endsection
+@endsection --}}
