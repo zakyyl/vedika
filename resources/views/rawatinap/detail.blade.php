@@ -33,7 +33,7 @@
                             <form action="{{ route('rawatinap.upload_resume', $data->no_rawat) }}" method="POST"
                                 enctype="multipart/form-data">
                                 @csrf
-                                <div class="mb-3">
+                                <div class="mb-3 mt-3">
                                     <label class="form-label fw-semibold">Nomor Rawat</label>
                                     <input type="text" class="form-control bg-light" value="{{ $data->no_rawat }}"
                                         readonly>
@@ -94,8 +94,8 @@
                 <div class="modal-dialog modal-lg">
                     <div class="modal-content rounded-4">
                         <div class="modal-header bg-warning text-white">
-                            <h5 class="modal-title fw-bold" id="updateStatusModalLabel">Update Status Klaim</h5>
-                            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                            <h5 class="modal-title fw-bold mb-4" id="updateStatusModalLabel">Update Status Klaim</h5>
+                            <button type="button" class="btn-close btn-close-white mb-1" data-bs-dismiss="modal"
                                 aria-label="Close"></button>
                         </div>
 

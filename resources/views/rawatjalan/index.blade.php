@@ -1,91 +1,81 @@
 @extends('layouts.materio')
 
 @section('content')
-    <h4 class="mb-4">Data Rawat Jalan</h4>
+    <h5 class="fw-bold mb-3">Data Rawat Jalan</h5>
 
-    <div class="col-md-12 mb-3">
-        Total <strong>{{ $total }}</strong> data.
+    <div class="mb-3">
+        <small class="text-muted">Total data: <strong>{{ $total }}</strong></small>
     </div>
 
-    <form method="GET" action="{{ route('rawatjalan.index') }}" class="row g-3 mb-4 align-items-end">
+    <form method="GET" action="{{ route('rawatjalan.index') }}" class="row g-2 mb-4 align-items-end">
         <div class="col-md-3">
-            <label class="form-label fw-semibold">Cari No Rawat</label>
-            <input type="text" name="search" class="form-control" placeholder="Contoh: 2025/06/01/000012"
-                value="{{ request('search') }}">
+            <label class="form-label">No. Rawat</label>
+            <input type="text" name="search" class="form-control form-control-sm"
+                   placeholder="Contoh: 2025/06/01/000012" value="{{ request('search') }}">
         </div>
-
         <div class="col-md-3">
-            <label class="form-label fw-semibold">Tanggal Mulai</label>
-            <input type="date" name="tgl_dari" class="form-control" value="{{ request('tgl_dari') }}">
+            <label class="form-label">Tanggal Mulai</label>
+            <input type="date" name="tgl_dari" class="form-control form-control-sm"
+                   value="{{ request('tgl_dari') }}">
         </div>
-
         <div class="col-md-3">
-            <label class="form-label fw-semibold">Tanggal Akhir</label>
-            <input type="date" name="tgl_sampai" class="form-control" value="{{ request('tgl_sampai') }}">
+            <label class="form-label">Tanggal Akhir</label>
+            <input type="date" name="tgl_sampai" class="form-control form-control-sm"
+                   value="{{ request('tgl_sampai') }}">
         </div>
-
         <div class="col-md-3">
-            <label class="form-label d-block">&nbsp;</label>
-            <button type="submit" class="btn btn-primary w-100">
+            <button type="submit" class="btn btn-sm btn-outline-primary w-100">
                 <i class="bx bx-filter-alt me-1"></i> Filter
             </button>
         </div>
     </form>
 
-    <div class="col-12">
-        <div class="card overflow-hidden" style="min-height: 300px;">
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
+<div class="card border-0 shadow-sm" style="min-height: 500px;">
+    <div class="table-responsive">
+        <table class="table table-hover table-sm align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>No Rawat</th>
+                        <th>Tanggal</th>
+                        <th>Dokter</th>
+                        <th>Pasien</th>
+                        <th>Poli</th>
+                        <th class="text-center">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($rawatJalan as $data)
                         <tr>
-                            <th>No Rawat</th>
-                            <th>Tgl Registrasi</th>
-                            <th>Dokter</th>
-                            <th>Pasien</th>
-                            <th>Poli</th>
-                            <th class="text-center">Aksi</th>
+                            <td>{{ $data->no_rawat }}</td>
+                            <td>{{ $data->tgl_registrasi }}</td>
+                            <td>{{ \Illuminate\Support\Str::limit($data->nm_dokter, 25, '...') }}</td>
+                            <td>
+                            <div>
+                                <span class="d-block">
+                                    {{ \Illuminate\Support\Str::limit($data->nm_pasien, 20, '...') }}
+                                </span>
+                                <span class="badge bg-dark text-muted">RM: {{ $data->no_rkm_medis }}</span>
+                            </div>
+                            </td>
+                            <td>{{ $data->nm_poli }}</td>
+                            <td class="text-center">
+                                <a href="{{ route('rawatjalan.detail', urlencode($data->no_rawat)) }}"
+                                   class="btn btn-sm btn-primary">Detail</a>
+                                <a href="{{ route('rawatjalan.pemeriksaan', urlencode($data->no_rawat)) }}"
+                                   class="btn btn-sm btn-outline-secondary">Klaim</a>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($rawatJalan as $data)
-                            <tr>
-                                <td class="text-truncate">{{ $data->no_rawat }}</td>
-                                <td class="text-truncate">{{ $data->tgl_registrasi }}</td>
-                                <td class="text-truncate">{{ $data->nm_dokter }}</td>
-                                <td class="text-truncate">
-                                    <div class="d-flex align-items-center">
-                                        <div>
-                                            <h6 class="mb-0 text-truncate">{{ $data->nm_pasien }}</h6>
-                                            <small class="text-muted text-truncate">No RM: {{ $data->no_rkm_medis }}</small>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td class="text-truncate">{{ $data->nm_poli }}</td>
-                                <td>
-                                    <div class="d-grid gap-2">
-                                        <a href="{{ route('rawatjalan.detail', urlencode($data->no_rawat)) }}"
-                                            class="btn btn-sm btn-primary">
-                                            Detail
-                                        </a>
-                                        <a href="{{ route('rawatjalan.pemeriksaan', urlencode($data->no_rawat)) }}"
-                                            class="btn btn-sm btn-outline-secondary">
-                                            Lihat Klaim
-                                        </a>
-                                    </div>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr>
-                                <td colspan="6" class="text-center">Tidak ada data ditemukan.</td>
-                            </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    @empty
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">Tidak ada data ditemukan.</td>
+                        </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
 
-            <div class="d-flex justify-content-center my-3">
-                {{ $rawatJalan->links('pagination::simple-bootstrap-4') }}
-            </div>
+        <div class="d-flex justify-content-center py-3">
+            {{ $rawatJalan->links('pagination::simple-bootstrap-4') }}
         </div>
     </div>
 @endsection
