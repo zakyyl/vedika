@@ -3,7 +3,6 @@
 @section('title', 'Data Rawat Jalan')
 
 @section('content')
-    <!-- Content Header -->
     <div class="content-header">
         <div class="container-fluid">
             <div class="row mb-2 align-items-center">
@@ -16,12 +15,8 @@
             </div>
         </div>
     </div>
-
-    <!-- Main Content -->
     <section class="content">
         <div class="container-fluid">
-
-            <!-- Filter Form -->
             <div class="card card-outline card-primary">
                 <div class="card-header">
                     <h3 class="card-title">Filter Data</h3>
@@ -54,7 +49,6 @@
                 </div>
             </div>
 
-            <!-- Table Card -->
             <div class="card card-success card-outline">
                 <div class="card-header">
                     <h3 class="card-title">Daftar Rawat Jalan</h3>
@@ -88,10 +82,6 @@
                                                 class="btn btn-sm btn-info" title="Detail">
                                                 <i class="fas fa-eye"></i>
                                             </a>
-                                            {{-- <a href="{{ route('rawatjalan.pemeriksaan', urlencode($data->no_rawat)) }}"
-                                                class="btn btn-sm btn-secondary" title="Klaim">
-                                                <i class="fas fa-clipboard-check"></i>
-                                            </a> --}}
                                         </td>
                                     </tr>
                                 @empty
@@ -107,7 +97,6 @@
                     </div>
                 </div>
 
-                <!-- Pagination -->
                 @if ($rawatJalan->hasPages())
                     <div class="card-footer d-flex justify-content-center">
                         {{ $rawatJalan->appends(request()->query())->links('pagination::simple-bootstrap-4') }}

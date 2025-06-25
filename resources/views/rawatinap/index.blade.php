@@ -86,10 +86,6 @@
                                            class="btn btn-sm btn-info" title="Detail">
                                             <i class="fas fa-eye"></i>
                                         </a>
-                                        <a href="{{ route('rawatinap.pemeriksaan', urlencode($data->no_rawat)) }}"
-                                           class="btn btn-sm btn-secondary" title="Klaim">
-                                            <i class="fas fa-clipboard-check"></i>
-                                        </a>
                                     </td>
                                 </tr>
                             @empty

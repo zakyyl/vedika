@@ -10,69 +10,62 @@ use Illuminate\Support\Facades\Log;
 
 class RawatInapController extends Controller
 {
+
     public function index(Request $request)
-{
-    // Ambil nomor halaman, default ke 1 jika tidak ada
-    $page = $request->get('page', 1);
+    {
+        $page = $request->get('page', 1);
+        $cacheKey = 'rawatinap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
 
-    // Buat key cache unik berdasarkan query kecuali 'page', lalu gabung dengan nomor halaman
-    $cacheKey = 'rawatinap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
+        $rawatInap = Cache::remember($cacheKey, 300, function () use ($request) {
+            $query = DB::table('reg_periksa')
+                ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
+                ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+                ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
+                ->select(
+                    'reg_periksa.no_rawat',
+                    'reg_periksa.tgl_registrasi',
+                    'dokter.nm_dokter',
+                    'reg_periksa.no_rkm_medis',
+                    'pasien.nm_pasien',
+                    'poliklinik.nm_poli'
+                )
+                ->where('reg_periksa.kd_pj', 'BP1')
+                ->where('reg_periksa.status_lanjut', 'ralan');
 
-    // Ambil dari cache jika ada
-    $data = Cache::remember($cacheKey, 300, function () use ($request) {
-        $query = DB::table('reg_periksa')
-            ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
-            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-            ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
-            ->select(
-                'reg_periksa.no_rawat',
-                'reg_periksa.tgl_registrasi',
-                'dokter.nm_dokter',
-                'reg_periksa.no_rkm_medis',
-                'pasien.nm_pasien',
-                'poliklinik.nm_poli'
-            )
-            ->where('reg_periksa.kd_pj', 'BP1')
-            ->where('reg_periksa.status_lanjut', 'ranap');
+            if ($request->filled('search')) {
+                $query->where('reg_periksa.no_rawat', 'like', '%' . $request->search . '%');
+            }
 
-        // Tambahkan filter jika ada
-        if ($request->filled('search')) {
-            $query->where('reg_periksa.no_rawat', 'like', '%' . $request->search . '%');
-        }
+            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+                $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+            }
 
-        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
-            $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
-        }
+            return $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
+                ->orderBy('reg_periksa.jam_reg', 'desc')
+                ->paginate(25)
+                ->withQueryString();
+        });
 
-        // Ambil hasil paginate
-        return $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
-            ->orderBy('reg_periksa.jam_reg', 'desc')
-            ->paginate(25)
-            ->withQueryString();
-    });
+        $total = DB::table('reg_periksa')
+            ->where('kd_pj', 'BP1')
+            ->where('status_lanjut', 'ralan')
+            ->when($request->filled('search'), function ($q) use ($request) {
+                return $q->where('no_rawat', 'like', '%' . $request->search . '%');
+            })
+            ->when($request->filled('tgl_dari') && $request->filled('tgl_sampai'), function ($q) use ($request) {
+                return $q->whereBetween('tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+            })
+            ->count();
 
-    // Hitung total data (tidak perlu di-cache, karena ini ringan)
-    $total = DB::table('reg_periksa')
-        ->where('kd_pj', 'BP1')
-        ->where('status_lanjut', 'ranap')
-        ->when($request->filled('search'), function ($q) use ($request) {
-            return $q->where('no_rawat', 'like', '%' . $request->search . '%');
-        })
-        ->when($request->filled('tgl_dari') && $request->filled('tgl_sampai'), function ($q) use ($request) {
-            return $q->whereBetween('tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
-        })
-        ->count();
-
-    // Kirim ke view
-    return view('rawatinap.index', [
-        'rawatInap' => $data,
-        'total' => $total,
-    ]);
-}
+        return view('rawatinap.index', [
+            'rawatInap' => $rawatInap,
+            'total' => $total,
+        ]);
+    }
 
     public function detail($no_rawat)
     {
-        $data = Cache::remember("rawatinap_detail_$no_rawat", 300, function () use ($no_rawat) { 
+        $data = Cache::remember("rawatinap_detail_$no_rawat", 300, function () use ($no_rawat) {
             return DB::table('reg_periksa')
                 ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
                 ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
@@ -95,17 +88,9 @@ class RawatInapController extends Controller
             abort(404, 'Data rawat inap tidak ditemukan');
         }
 
-        $vedikaData = Cache::remember("vedika_data_$no_rawat", 180, function () use ($no_rawat) {
-            return DB::table('mlite_vedika')
-                ->where('no_rawat', $no_rawat)
-                ->select('nosep', 'status', 'catatan')
-                ->first();
-        });
-
-        $kategori = Cache::remember('master_berkas_digital', 3600, function () { 
+        $kategori = Cache::remember('master_berkas_digital', 3600, function () {
             return DB::table('master_berkas_digital')->get();
         });
-
 
         $berkas = Cache::remember("berkas_digital_$no_rawat", 300, function () use ($no_rawat) {
             return DB::table('berkas_digital_perawatan')
@@ -115,7 +100,33 @@ class RawatInapController extends Controller
                 ->get();
         });
 
-        return view('rawatinap.detail', compact('data', 'vedikaData', 'kategori', 'berkas'));
+        $pemeriksaan = DB::table('pemeriksaan_ralan')
+            ->join('reg_periksa', 'pemeriksaan_ralan.no_rawat', '=', 'reg_periksa.no_rawat')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
+            ->select(
+                'pemeriksaan_ralan.*',
+                'reg_periksa.no_rkm_medis',
+                'pasien.nm_pasien',
+                'dokter.nm_dokter'
+            )
+            ->where('pemeriksaan_ralan.no_rawat', $no_rawat)
+            ->orderBy('pemeriksaan_ralan.tgl_perawatan', 'desc')
+            ->orderBy('pemeriksaan_ralan.jam_rawat', 'desc')
+            ->get();
+
+        $no_rkm_medis = DB::table('reg_periksa')
+            ->where('no_rawat', $no_rawat)
+            ->value('no_rkm_medis');
+
+        $suratKontrol = DB::table('skdp_bpjs')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'skdp_bpjs.kd_dokter')
+            ->where('skdp_bpjs.no_rkm_medis', $no_rkm_medis)
+            ->orderByDesc('skdp_bpjs.tanggal_datang')
+            ->limit(8)
+            ->get();
+
+        return view('rawatinap.detail', compact('data', 'kategori', 'berkas', 'pemeriksaan', 'suratKontrol'));
     }
 
 

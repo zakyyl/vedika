@@ -48,15 +48,15 @@
 
     Route::put('/rawatinap/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatinap.update_status');
     Route::put('/rawatjalan/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatjalan.update_status');
-// Untuk rawat inap
-Route::get('/rawatinap/statusklaim/{no_rawat}', [RawatInapController::class, 'lihatResume'])
-    ->where('no_rawat', '.*')
-    ->name('rawatinap.statusklaim');
+    // Untuk rawat inap
+    Route::get('/rawatinap/statusklaim/{no_rawat}', [RawatInapController::class, 'lihatResume'])
+        ->where('no_rawat', '.*')
+        ->name('rawatinap.statusklaim');
 
-// Untuk rawat jalan
-Route::get('/rawatjalan/statusklaim/{no_rawat}', [RawatJalanController::class, 'lihatResume'])
-    ->where('no_rawat', '.*')
-    ->name('rawatjalan.statusklaim');
+    // Untuk rawat jalan
+    Route::get('/rawatjalan/statusklaim/{no_rawat}', [RawatJalanController::class, 'lihatResume'])
+        ->where('no_rawat', '.*')
+        ->name('rawatjalan.statusklaim');
 
 
     Route::get('/rawatjalan/{no_rawat}/pemeriksaan', [RawatJalanController::class, 'lihatPemeriksaan'])

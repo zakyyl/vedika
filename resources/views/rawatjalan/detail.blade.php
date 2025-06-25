@@ -23,18 +23,14 @@
             </div>
         </div>
     </div>
-
     <section class="content px-3">
         @if($data)
-
-            {{-- Alert Sukses / Error --}}
             @if(session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                 </div>
             @endif
-
             @if(session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
@@ -42,30 +38,20 @@
                 </div>
             @endif
 
-            {{-- Informasi Pasien --}}
             <div class="row mb-3">
                 <div class="col-md-12">
                     @include('rawatjalan.partials.info_pasien')
                 </div>
             </div>
 
-            {{-- Upload Resume --}}
             <div class="row mb-3">
                 <div class="col-md-12">
                     @include('rawatjalan.partials.upload_resume')
                 </div>
             </div>
-
-            {{-- Pemeriksaan --}}
             @include('rawatjalan.partials.pemeriksaan', ['data' => $pemeriksaan])
-
-            {{-- Surat Kontrol --}}
             @include('rawatjalan.partials.surat_kontrol')
-
-            {{-- Modal --}}
             @include('rawatjalan.partials.modal_update')
-
-            {{-- Tombol Kembali --}}
             <div class="card">
                 <div class="card-footer">
                     <a href="{{ route('rawatjalan.index') }}" class="btn btn-default">
@@ -73,7 +59,6 @@
                     </a>
                 </div>
             </div>
-
         @else
             <div class="alert alert-warning">
                 <i class="fas fa-exclamation-triangle"></i> Data tidak ditemukan.

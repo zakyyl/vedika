@@ -5,7 +5,7 @@
                 <h4 class="modal-title">Update Status Klaim</h4>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
-            <form action="{{ route('rawatjalan.update_status', $data->no_rawat) }}" method="POST">
+            <form action="{{ route('rawatinap.update_status', $data->no_rawat) }}" method="POST">
                 @csrf
                 @method('PUT')
                 <div class="modal-body">

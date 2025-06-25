@@ -4,7 +4,7 @@
             <h3 class="card-title">Upload Resume</h3>
         </div>
         <div class="card-body">
-            <form action="{{ route('rawatjalan.upload_resume', $data->no_rawat) }}" method="POST"
+            <form action="{{ route('rawatinap.upload_resume', $data->no_rawat) }}" method="POST"
                 enctype="multipart/form-data">
                 @csrf
                 <div class="d-flex flex-wrap">
