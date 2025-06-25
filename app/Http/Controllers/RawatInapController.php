@@ -11,56 +11,64 @@ use Illuminate\Support\Facades\Log;
 class RawatInapController extends Controller
 {
     public function index(Request $request)
-    {
-        $cacheKey = 'rawatinap_index_' . md5(serialize($request->all()));
+{
+    // Ambil nomor halaman, default ke 1 jika tidak ada
+    $page = $request->get('page', 1);
 
-        $result = Cache::remember($cacheKey, 300, function () use ($request) {
-            $query = DB::table('reg_periksa')
-                ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
-                ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-                ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
-                ->select(
-                    'reg_periksa.no_rawat',
-                    'reg_periksa.tgl_registrasi',
-                    'dokter.nm_dokter',
-                    'reg_periksa.no_rkm_medis',
-                    'pasien.nm_pasien',
-                    'poliklinik.nm_poli'
-                )
-                ->where('reg_periksa.kd_pj', 'BP1')
-                ->where('reg_periksa.status_lanjut', 'ranap');
+    // Buat key cache unik berdasarkan query kecuali 'page', lalu gabung dengan nomor halaman
+    $cacheKey = 'rawatinap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
 
-            if ($request->filled('search')) {
-                $query->where('reg_periksa.no_rawat', 'like', '%' . $request->search . '%');
-            }
+    // Ambil dari cache jika ada
+    $data = Cache::remember($cacheKey, 300, function () use ($request) {
+        $query = DB::table('reg_periksa')
+            ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
+            ->select(
+                'reg_periksa.no_rawat',
+                'reg_periksa.tgl_registrasi',
+                'dokter.nm_dokter',
+                'reg_periksa.no_rkm_medis',
+                'pasien.nm_pasien',
+                'poliklinik.nm_poli'
+            )
+            ->where('reg_periksa.kd_pj', 'BP1')
+            ->where('reg_periksa.status_lanjut', 'ranap');
 
-            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
-                $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
-            }
+        // Tambahkan filter jika ada
+        if ($request->filled('search')) {
+            $query->where('reg_periksa.no_rawat', 'like', '%' . $request->search . '%');
+        }
 
+        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+        }
 
-            $total = DB::table('reg_periksa')
-                ->where('kd_pj', 'BP1')
-                ->where('status_lanjut', 'ranap')
-                ->when($request->filled('search'), function ($q) use ($request) {
-                    return $q->where('no_rawat', 'like', '%' . $request->search . '%');
-                })
-                ->when($request->filled('tgl_dari') && $request->filled('tgl_sampai'), function ($q) use ($request) {
-                    return $q->whereBetween('tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
-                })
-                ->count();
+        // Ambil hasil paginate
+        return $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
+            ->orderBy('reg_periksa.jam_reg', 'desc')
+            ->paginate(25)
+            ->withQueryString();
+    });
 
+    // Hitung total data (tidak perlu di-cache, karena ini ringan)
+    $total = DB::table('reg_periksa')
+        ->where('kd_pj', 'BP1')
+        ->where('status_lanjut', 'ranap')
+        ->when($request->filled('search'), function ($q) use ($request) {
+            return $q->where('no_rawat', 'like', '%' . $request->search . '%');
+        })
+        ->when($request->filled('tgl_dari') && $request->filled('tgl_sampai'), function ($q) use ($request) {
+            return $q->whereBetween('tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+        })
+        ->count();
 
-            $rawatInap = $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
-                ->orderBy('reg_periksa.jam_reg', 'desc')
-                ->simplePaginate(25)
-                ->withQueryString();
-
-            return compact('rawatInap', 'total');
-        });
-
-        return view('rawatinap.index', $result);
-    }
+    // Kirim ke view
+    return view('rawatinap.index', [
+        'rawatInap' => $data,
+        'total' => $total,
+    ]);
+}
 
     public function detail($no_rawat)
     {

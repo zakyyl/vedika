@@ -1,144 +1,138 @@
-@extends('layouts.materio')
+@extends('layouts.master')
 
 @section('content')
-    <div class="container-fluid mt-4">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-primary mb-0">
-                <i class="ti ti-clipboard-list me-2"></i>
-                Data Pemeriksaan Rawat Jalan
-            </h4>
-        </div>
-
-        @if ($data->isEmpty())
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center py-5">
-                    <i class="ti ti-clipboard-off display-4 text-muted mb-3"></i>
-                    <h5 class="text-muted">Tidak Ada Data Pemeriksaan</h5>
-                    <p class="text-muted mb-0">Belum ada data pemeriksaan untuk No. Rawat:
-                        <strong>{{ $no_rawat }}</strong>
-                    </p>
+    <!-- Content Header -->
+    <section class="content-header">
+        <div class="container-fluid">
+            <div class="row mb-2">
+                <div class="col-sm-6">
+                    <h1><i class="fas fa-clipboard-list mr-2"></i>Data Pemeriksaan Rawat Jalan</h1>
+                </div>
+                <div class="col-sm-6">
+                    <ol class="breadcrumb float-sm-right">
+                        <li class="breadcrumb-item"><a href="#">Home</a></li>
+                        <li class="breadcrumb-item"><a href="{{ route('rawatjalan.index') }}">Rawat Jalan</a></li>
+                        <li class="breadcrumb-item active">Data Pemeriksaan</li>
+                    </ol>
                 </div>
             </div>
-        @else
-            <div class="accordion accordion-flush" id="accordionPemeriksaan">
-                @foreach ($data as $index => $item)
-                    <div class="accordion-item border-0 mb-3 shadow-sm rounded-3 overflow-hidden">
-                        <h2 class="accordion-header" id="heading{{ $index }}">
-                            <button class="accordion-button collapsed bg-light-primary text-primary fw-semibold"
-                                type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}"
-                                aria-expanded="false" aria-controls="collapse{{ $index }}">
-                                <div class="d-flex align-items-center w-100 flex-column flex-md-row text-start">
-                                    <div class="flex-grow-1 mb-2 mb-md-0">
-                                        <div class="fw-bold text-dark">
-                                            {{ $item->no_rawat }} | {{ $item->no_rkm_medis }} | {{ $item->nm_pasien }} |
-                                            {{ $item->nm_dokter }}
-                                        </div>
-                                        <div class="small text-muted">
-                                            {{ \Carbon\Carbon::parse($item->tgl_perawatan)->format('d M Y') }}
-                                        </div>
-                                        <div class="small text-muted">
-                                            Petugas: {{ $item->nip }}
-                                        </div>
-                                    </div>
-                                    <div class="text-end ms-md-3">
-                                        <span class="badge bg-light-success text-White">
-                                            <i class="ti ti-stethoscope me-1"></i>
-                                            Selengkapnya
-                                        </span>
-                                    </div>
+        </div>
+    </section>
 
-                                </div>
-                            </button>
-                        </h2>
+    <!-- Main Content -->
+    <section class="content">
+        <div class="container-fluid">
+            @if ($data->isEmpty())
+                <div class="alert alert-info text-center">
+                    <i class="fas fa-info-circle mr-1"></i> Tidak ada data pemeriksaan untuk No. Rawat: <strong>{{ $no_rawat }}</strong>
+                </div>
+                <div class="text-center">
+                    <a href="{{ route('rawatjalan.index') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left mr-1"></i>Kembali
+                    </a>
+                </div>
+            @else
+                <div class="accordion" id="pemeriksaanAccordion">
+                    @foreach ($data as $index => $item)
+                        <div class="card mb-2">
+                            <div class="card-header" id="heading{{ $index }}">
+                                <h2 class="mb-0">
+                                    <button class="btn btn-link text-left w-100" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ $index }}" aria-expanded="false" aria-controls="collapse{{ $index }}">
+                                        {{ $item->no_rawat }} - {{ $item->nm_pasien }} | Dr. {{ $item->nm_dokter }} | {{ \Carbon\Carbon::parse($item->tgl_perawatan)->format('d/m/Y') }}
+                                    </button>
+                                </h2>
+                            </div>
 
-
-                        <div id="collapse{{ $index }}" class="accordion-collapse collapse"
-                            aria-labelledby="heading{{ $index }}" data-bs-parent="#accordionPemeriksaan">
-                            <div class="accordion-body p-0">
-                                <div class="table-responsive">
-                                    <table class="table table-striped table-hover table-sm mb-0" style="font-size: 0.8rem;">
-                                        <thead class="table-dark">
-                                            <tr>
-                                                <th>Parameter</th>
-                                                <th>Nilai</th>
-                                                <th>Parameter</th>
-                                                <th>Nilai</th>
-                                            </tr>
-                                        </thead>
+                            <div id="collapse{{ $index }}" class="collapse" aria-labelledby="heading{{ $index }}" data-bs-parent="#pemeriksaanAccordion">
+                                <div class="card-body">
+                                    <table class="table table-sm table-bordered">
                                         <tbody>
                                             <tr>
-                                                <td class="fw-semibold">Tekanan Darah</td>
+                                                <th>Tensi</th>
                                                 <td>{{ $item->tensi ?: '-' }}</td>
-                                                <td class="fw-semibold">Suhu Tubuh</td>
+                                                <th>Suhu</th>
                                                 <td>{{ $item->suhu_tubuh ?: '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-semibold">Nadi</td>
+                                                <th>Nadi</th>
                                                 <td>{{ $item->nadi ?: '-' }}</td>
-                                                <td class="fw-semibold">Respirasi</td>
+                                                <th>Respirasi</th>
                                                 <td>{{ $item->respirasi ?: '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-semibold">SpO2</td>
+                                                <th>SpO2</th>
                                                 <td>{{ $item->spo2 ?: '-' }}</td>
-                                                <td class="fw-semibold">GCS</td>
+                                                <th>GCS</th>
                                                 <td>{{ $item->gcs ?: '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-semibold">Tinggi Badan</td>
+                                                <th>TB</th>
                                                 <td>{{ $item->tinggi ?: '-' }}</td>
-                                                <td class="fw-semibold">Berat Badan</td>
+                                                <th>BB</th>
                                                 <td>{{ $item->berat ?: '-' }}</td>
                                             </tr>
                                             <tr>
-                                                <td class="fw-semibold">Lingkar Perut</td>
+                                                <th>LP</th>
                                                 <td>{{ $item->lingkar_perut ?: '-' }}</td>
-                                                <td class="fw-semibold">Kesadaran</td>
+                                                <th>Kesadaran</th>
                                                 <td>{{ $item->kesadaran ?: '-' }}</td>
                                             </tr>
-                                            <tr>
-                                                <td class="fw-semibold">Keluhan</td>
-                                                <td colspan="3">{{ $item->keluhan ?: '-' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold">Pemeriksaan</td>
-                                                <td colspan="3">{{ $item->pemeriksaan ?: '-' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold">Alergi</td>
-                                                <td colspan="3">{{ $item->alergi ?: '-' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold">Penilaian</td>
-                                                <td colspan="3">{{ $item->penilaian ?: '-' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold">RTL</td>
-                                                <td colspan="3">{{ $item->rtl ?: '-' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold">Instruksi</td>
-                                                <td colspan="3">{{ $item->instruksi ?: '-' }}</td>
-                                            </tr>
-                                            <tr>
-                                                <td class="fw-semibold">Evaluasi</td>
-                                                <td colspan="3">{{ $item->evaluasi ?: '-' }}</td>
-                                            </tr>
+                                            @if($item->keluhan)
+                                                <tr>
+                                                    <th>Keluhan</th>
+                                                    <td colspan="3">{{ $item->keluhan }}</td>
+                                                </tr>
+                                            @endif
+                                            @if($item->pemeriksaan)
+                                                <tr>
+                                                    <th>Pemeriksaan</th>
+                                                    <td colspan="3">{{ $item->pemeriksaan }}</td>
+                                                </tr>
+                                            @endif
+                                            @if($item->alergi)
+                                                <tr>
+                                                    <th class="text-warning">Alergi</th>
+                                                    <td colspan="3">{{ $item->alergi }}</td>
+                                                </tr>
+                                            @endif
+                                            @if($item->penilaian)
+                                                <tr>
+                                                    <th>Penilaian</th>
+                                                    <td colspan="3">{{ $item->penilaian }}</td>
+                                                </tr>
+                                            @endif
+                                            @if($item->rtl)
+                                                <tr>
+                                                    <th>RTL</th>
+                                                    <td colspan="3">{{ $item->rtl }}</td>
+                                                </tr>
+                                            @endif
+                                            @if($item->instruksi)
+                                                <tr>
+                                                    <th>Instruksi</th>
+                                                    <td colspan="3">{{ $item->instruksi }}</td>
+                                                </tr>
+                                            @endif
+                                            @if($item->evaluasi)
+                                                <tr>
+                                                    <th>Evaluasi</th>
+                                                    <td colspan="3">{{ $item->evaluasi }}</td>
+                                                </tr>
+                                            @endif
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                @endforeach
-            </div>
-        @endif
+                    @endforeach
+                </div>
 
-        <div class="d-flex justify-content-between align-items-center mt-4">
-            <a href="{{ route('rawatjalan.index') }}" class="btn btn-outline-primary rounded-pill">
-                <i class="ti ti-arrow-left me-2"></i>Kembali ke Daftar
-            </a>
+                <div class="text-center mt-4">
+                    <a href="{{ route('rawatjalan.index') }}" class="btn btn-primary">
+                        <i class="fas fa-arrow-left mr-1"></i>Kembali ke Daftar
+                    </a>
+                </div>
+            @endif
         </div>
-    </div>
-
+    </section>
 @endsection
