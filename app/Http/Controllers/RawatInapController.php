@@ -21,19 +21,25 @@ class RawatInapController extends Controller
                 ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
                 ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
                 ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
+                ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
                 ->select(
                     'reg_periksa.no_rawat',
                     'reg_periksa.tgl_registrasi',
                     'dokter.nm_dokter',
                     'reg_periksa.no_rkm_medis',
                     'pasien.nm_pasien',
-                    'poliklinik.nm_poli'
+                    'poliklinik.nm_poli',
+                    'bridging_sep.no_sep'
                 )
                 ->where('reg_periksa.kd_pj', 'BP1')
                 ->where('reg_periksa.status_lanjut', 'ralan');
 
-            if ($request->filled('search')) {
-                $query->where('reg_periksa.no_rawat', 'like', '%' . $request->search . '%');
+                if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('reg_periksa.no_rawat', 'like', "%{$search}%")
+                        ->orWhere('bridging_sep.no_sep', 'like', "%{$search}%");
+                });
             }
 
             if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
@@ -47,10 +53,15 @@ class RawatInapController extends Controller
         });
 
         $total = DB::table('reg_periksa')
+            ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
             ->where('kd_pj', 'BP1')
-            ->where('status_lanjut', 'ralan')
+            ->where('status_lanjut', 'ranap')
             ->when($request->filled('search'), function ($q) use ($request) {
-                return $q->where('no_rawat', 'like', '%' . $request->search . '%');
+                $search = $request->search;
+                return $q->where(function ($q) use ($search) {
+                    $q->where('reg_periksa.no_rawat', 'like', "%{$search}%")
+                        ->orWhere('bridging_sep.no_sep', 'like', "%{$search}%");
+                });
             })
             ->when($request->filled('tgl_dari') && $request->filled('tgl_sampai'), function ($q) use ($request) {
                 return $q->whereBetween('tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
@@ -71,6 +82,7 @@ class RawatInapController extends Controller
                 ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
                 ->join('penjab', 'reg_periksa.kd_pj', '=', 'penjab.kd_pj')
                 ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
+                ->leftJoin(DB::raw('(SELECT no_rawat, MAX(no_sep) as no_sep FROM bridging_sep GROUP BY no_rawat) as bridging_sep'), 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
                 ->where('reg_periksa.no_rawat', $no_rawat)
                 ->select(
                     'reg_periksa.*',
@@ -79,7 +91,8 @@ class RawatInapController extends Controller
                     'pasien.jk',
                     'pasien.umur',
                     'poliklinik.nm_poli',
-                    'penjab.png_jawab'
+                    'penjab.png_jawab',
+                    'bridging_sep.no_sep'
                 )
                 ->first();
         });
@@ -126,7 +139,69 @@ class RawatInapController extends Controller
             ->limit(8)
             ->get();
 
-        return view('rawatinap.detail', compact('data', 'kategori', 'berkas', 'pemeriksaan', 'suratKontrol'));
+        $rawatDr = DB::table('rawat_inap_dr')
+            ->join('jns_perawatan', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
+            ->join('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('rawat_inap_dr.no_rawat', $no_rawat)
+            ->select('rawat_inap_dr.*', 'jns_perawatan.nm_perawatan', 'dokter.nm_dokter')
+            ->get();
+
+        $rawatPr = DB::table('rawat_inap_pr')
+            ->join('jns_perawatan', 'rawat_inap_pr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
+            ->join('petugas', 'rawat_inap_pr.nip', '=', 'petugas.nip')
+            ->where('rawat_inap_pr.no_rawat', $no_rawat)
+            ->select('rawat_inap_pr.*', 'jns_perawatan.nm_perawatan', 'petugas.nama as nama_petugas')
+            ->get();
+
+        $rawatDrPr = DB::table('rawat_inap_drpr')
+            ->join('jns_perawatan', 'rawat_inap_drpr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
+            ->join('dokter', 'rawat_inap_drpr.kd_dokter', '=', 'dokter.kd_dokter')
+            ->join('petugas', 'rawat_inap_drpr.nip', '=', 'petugas.nip')
+            ->where('rawat_inap_drpr.no_rawat', $no_rawat)
+            ->select('rawat_inap_drpr.*', 'jns_perawatan.nm_perawatan', 'dokter.nm_dokter', 'petugas.nama as nama_petugas')
+            ->get();
+
+        $operasi = DB::table('operasi')
+            ->join('paket_operasi', 'operasi.kode_paket', '=', 'paket_operasi.kode_paket')
+            ->where('operasi.no_rawat', $no_rawat)
+            ->select('operasi.*', 'paket_operasi.nm_perawatan')
+            ->get();
+
+        $laporanOperasi = DB::table('laporan_operasi')
+            ->where('no_rawat', $no_rawat)
+            ->get();
+
+        $tindakan_radiologi = DB::table('periksa_radiologi')
+            ->join('jns_perawatan_radiologi', 'periksa_radiologi.kd_jenis_prw', '=', 'jns_perawatan_radiologi.kd_jenis_prw')
+            ->join('dokter', 'periksa_radiologi.kd_dokter', '=', 'dokter.kd_dokter')
+            ->join('petugas', 'periksa_radiologi.nip', '=', 'petugas.nip')
+            ->where('periksa_radiologi.no_rawat', $no_rawat)
+            ->select('periksa_radiologi.*', 'jns_perawatan_radiologi.nm_perawatan', 'dokter.nm_dokter', 'petugas.nama')
+            ->get();
+
+        $hasil_radiologi = DB::table('hasil_radiologi')
+            ->where('no_rawat', $no_rawat)
+            ->get();
+
+            $no_sep = DB::table('bridging_sep')
+    ->where('no_rawat', $no_rawat)
+    ->value('no_sep');
+
+        return view('rawatinap.detail', compact(
+            'data',
+            'kategori',
+            'berkas',
+            'pemeriksaan',
+            'suratKontrol',
+            'rawatDr',
+            'rawatPr',
+            'rawatDrPr',
+            'operasi',
+            'laporanOperasi',
+            'tindakan_radiologi',
+            'hasil_radiologi',
+            'no_sep'
+        ));
     }
 
 
