@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@yield('title', 'AdminLTE Laravel')</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'AdminLTE Laravel')</title>
 
-  <!-- Font Awesome -->
+<link rel="icon" href="{{ asset('assets/img/backgrounds/logos.png') }}" type="image/png">
+
+
   <link rel="stylesheet" href="{{ asset('adminlte/plugins/fontawesome-free/css/all.min.css') }}">
-  <!-- AdminLTE -->
   <link rel="stylesheet" href="{{ asset('adminlte/dist/css/adminlte.min.css') }}">
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
@@ -16,7 +17,6 @@
   @include('layouts.navbar')
   @include('layouts.sidebar')
 
-  <!-- Content Wrapper. Contains page content -->
   <div class="content-wrapper">
     <section class="content px-3 pt-3">
       @yield('content')
@@ -27,14 +27,12 @@
 
 </div>
 
-<!-- Scripts -->
 <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>
 <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('adminlte/dist/js/adminlte.min.js') }}"></script>
 
-@yield('scripts') <!-- ← ini WAJIB -->
+@yield('scripts') 
 
-<!-- Optional Styles -->
 <style>
     .rotate-icon {
         transition: transform 0.3s ease;
