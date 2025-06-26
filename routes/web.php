@@ -25,9 +25,11 @@
     Route::post('/login', [AuthController::class, 'login'])->name('login.attempt');
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
 
-    Route::get('/dashboard', function () {
-        return view('dashboardmain');
-    })->middleware(['auth', 'verified'])->name('dashboard');
+    // Route::get('/dashboard', function () {
+    //     return view('dashboardmain');
+    // })->middleware(['auth', 'verified'])->name('dashboard');
+
+    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::get('/rawatjalan', [RawatJalanController::class, 'index'])->name('rawatjalan.index');
     Route::get('/rawatinap', [RawatInapController::class, 'index'])->name('rawatinap.index');
@@ -67,7 +69,7 @@
         ->where('no_rawat', '.*')
         ->name('rawatinap.pemeriksaan');
 
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
+    // Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');
 
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
