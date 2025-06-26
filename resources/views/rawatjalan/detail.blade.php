@@ -52,6 +52,12 @@
             @include('rawatjalan.partials.pemeriksaan', ['data' => $pemeriksaan])
             @include('rawatjalan.partials.surat_kontrol')
             @include('rawatjalan.partials.modal_update')
+            @include('rawatjalan.partials.tindakan')
+            @include('rawatjalan.partials.operasi')
+            @include('rawatjalan.partials.radiologi')
+
+
+            
             <div class="card">
                 <div class="card-footer">
                     <a href="{{ route('rawatjalan.index') }}" class="btn btn-default">

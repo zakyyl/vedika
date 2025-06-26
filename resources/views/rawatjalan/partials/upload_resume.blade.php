@@ -77,7 +77,7 @@
                     <div class="card-header p-2" id="headingResume">
                         <h5 class="mb-0">
                             <button
-                                class="btn btn-link collapsed w-100 text-left d-flex justify-content-between align-items-center"
+                                class="btn btn-link collapsed w-100 text-left d-flex justify-content-between align-items-center text-dark"
                                 data-toggle="collapse" data-target="#collapseResume" aria-expanded="false">
                                 <span>Berkas Terunggah</span>
                                 <i class="fas fa-chevron-down ml-2 rotate-icon"></i>
@@ -175,7 +175,7 @@
             const fileUrl = button.data('file');
             const fileType = button.data('type')?.toLowerCase();
 
-            console.log('Previewing:', fileUrl, 'Type:', fileType); 
+            console.log('Previewing:', fileUrl, 'Type:', fileType);
 
             const iframe = $('#modal-pdf');
             const image = $('#modal-image');

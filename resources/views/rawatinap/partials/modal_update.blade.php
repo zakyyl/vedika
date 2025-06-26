@@ -25,8 +25,7 @@
                     </div>
                     <div class="form-group">
                         <label>No. SEP</label>
-                        <input type="text" class="form-control"
-                            value="{{ $vedikaData->nosep ?? 'Belum ada data SEP' }}" readonly>
+                        <input type="text" class="form-control" value="{{ $no_sep ?? 'Belum ada data SEP' }}" readonly>
                     </div>
                     <div class="form-group">
                         <label>Status Klaim <span class="text-danger">*</span></label>

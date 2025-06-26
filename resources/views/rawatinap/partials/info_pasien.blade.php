@@ -10,6 +10,10 @@
                     <td>: {{ $data->no_rawat }}</td>
                 </tr>
                 <tr>
+                    <td width="25%">No Sep</td>
+                    <td>: {{ $data->no_sep }}</td>
+                </tr>
+                <tr>
                     <td>Tanggal</td>
                     <td>: {{ $data->tgl_registrasi }} {{ $data->jam_reg }}</td>
                 </tr>

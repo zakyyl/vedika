@@ -27,7 +27,7 @@
                             <div class="form-group col-md-4">
                                 <label>No. Rawat</label>
                                 <input type="text" name="search" class="form-control"
-                                    placeholder="Contoh: 2025/06/01/000012" value="{{ request('search') }}">
+                                    placeholder="No. Rawat/SEP" value="{{ request('search') }}">
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Tanggal Mulai</label>
@@ -59,6 +59,7 @@
                             <thead class="thead-light">
                                 <tr>
                                     <th>No Rawat</th>
+                                    <th>No SEP</th>
                                     <th>Tanggal</th>
                                     <th>Dokter</th>
                                     <th>Pasien</th>
@@ -70,6 +71,8 @@
                                 @forelse($rawatJalan as $data)
                                     <tr>
                                         <td>{{ $data->no_rawat }}</td>
+                                        {{-- <td>{{ $data->no_sep }}</td> --}}
+                                        <td>{{ !empty($data->no_sep) ? $data->no_sep : '-' }}</td>
                                         <td>{{ $data->tgl_registrasi }}</td>
                                         <td>{{ \Illuminate\Support\Str::limit($data->nm_dokter, 25, '...') }}</td>
                                         <td>
