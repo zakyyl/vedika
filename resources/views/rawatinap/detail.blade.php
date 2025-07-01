@@ -41,6 +41,7 @@
             <div class="row mb-3">
                 <div class="col-md-12">
                     @include('rawatinap.partials.info_pasien')
+                    @include('rawatinap.partials.sep-card')
                 </div>
             </div>
 

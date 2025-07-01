@@ -41,6 +41,8 @@
             <div class="row mb-3">
                 <div class="col-md-12">
                     @include('rawatjalan.partials.info_pasien')
+                    @include('rawatjalan.partials.sep-card')
+
                 </div>
             </div>
 
@@ -55,7 +57,6 @@
             @include('rawatjalan.partials.tindakan')
             @include('rawatjalan.partials.operasi')
             @include('rawatjalan.partials.radiologi')
-
 
             
             <div class="card">
