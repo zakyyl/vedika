@@ -25,27 +25,29 @@
                     </div>
                     <div class="form-group">
                         <label>No. SEP</label>
-                        <input type="text" class="form-control" value="{{ $no_sep ?? 'Belum ada data SEP' }}" readonly>
+                        <input type="text" class="form-control" value="{{ $no_sep ?? 'Belum ada data SEP' }}"
+                            readonly>
                     </div>
                     <div class="form-group">
-                        <label>Status Klaim <span class="text-danger">*</span></label>
-                        <select name="status" class="form-control" required>
-                            <option value="">-- Pilih Status --</option>
-                            <option value="Pengajuan"
-                                {{ isset($vedikaData) && $vedikaData->status == 'Pengajuan' ? 'selected' : '' }}>
-                                Pengajuan</option>
-                            <option value="Perbaiki"
-                                {{ isset($vedikaData) && $vedikaData->status == 'Perbaiki' ? 'selected' : '' }}>Perbaiki
-                            </option>
-                            <option value="Disetujui"
-                                {{ isset($vedikaData) && $vedikaData->status == 'Disetujui' ? 'selected' : '' }}>
-                                Disetujui</option>
+                        <label for="status">Status Klaim <span class="text-danger">*</span></label>
+                        <select name="status" id="status" class="form-control" required>
+                            @php
+                                $statusOptions = ['Pengajuan', 'Perbaiki', 'Disetujui'];
+                                $currentStatus = $vedikaData->status ?? null;
+                            @endphp
+
+                            @if (!$currentStatus)
+                                <option value="" selected disabled>-- Pilih Status --</option>
+                            @endif
+
+                            @foreach ($statusOptions as $status)
+                                <option value="{{ $status }}" {{ $currentStatus == $status ? 'selected' : '' }}>
+                                    {{ $status }}
+                                </option>
+                            @endforeach
                         </select>
-                        @if (isset($vedikaData) && $vedikaData->status)
-                            <small class="text-muted">Status saat ini:
-                                <strong>{{ $vedikaData->status }}</strong></small>
-                        @endif
                     </div>
+
                     <div class="form-group">
                         <label>Catatan</label>
                         <textarea name="catatan" class="form-control" rows="4" placeholder="Masukkan catatan...">{{ isset($vedikaData) ? $vedikaData->catatan : '' }}</textarea>
