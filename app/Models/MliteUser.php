@@ -17,7 +17,7 @@ class MliteUser extends Authenticatable
         'username',
         'fullname',
         'password',
-        'role',
+        'roles',
         'access',
     ];
 
