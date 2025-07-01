@@ -1,9 +1,15 @@
-<div class="col-md-12">
-    <div class="card shadow-sm">
-        <div class="card-header bg-light">
-            <h3 class="card-title">Upload Resume</h3>
-        </div>
-        <div class="card-body">
+            <div class="col-md-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light">
+                        <h3 class="card-title">Upload Resume</h3>
+                    </div>
+                    <div class="card-body">
+                        @if($readonly)
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle"></i>
+                    Anda tidak memiliki akses untuk mengunggah resume.
+                </div>
+            @endif
             <form action="{{ route('rawatjalan.upload_resume', $data->no_rawat) }}" method="POST"
                 enctype="multipart/form-data">
                 @csrf
@@ -15,7 +21,8 @@
                         </div>
                         <div class="form-group mb-3">
                             <label>Kategori Berkas <span class="text-danger">*</span></label>
-                            <select name="kode" class="form-control" required>
+                            <select name="kode" class="form-control" {{ $readonly ? 'disabled' : '' }} required>
+
                                 <option value="">-- Pilih Kategori --</option>
                                 @foreach ($kategori as $item)
                                     <option value="{{ $item->kode }}">{{ $item->nama }}</option>
@@ -24,11 +31,13 @@
                         </div>
                         <div class="form-group mb-3">
                             <label>Pilih Berkas <small class="text-muted">(.pdf / .jpg)</small></label>
-                            <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg" required>
+                            <input type="file" name="file" class="form-control" accept=".pdf,.jpg,.jpeg" {{ $readonly ? 'disabled' : '' }} required>
+
                             <small class="form-text text-muted">Format: PDF, JPG, JPEG</small>
                         </div>
                         <div class="d-flex justify-content-end mt-3">
-                            <button type="submit" class="btn btn-success">Upload</button>
+                            <button type="submit" class="btn btn-success" {{ $readonly ? 'disabled' : '' }}>Upload</button>
+
                         </div>
                     </div>
                     <div id="preview-wrapper" class="ml-md-4 mt-4 mt-md-0 d-none" style="width: 800px;">
