@@ -1,5 +1,4 @@
 <nav class="main-header navbar navbar-expand navbar-white navbar-light">
-  <!-- Left navbar links -->
   <ul class="navbar-nav">
     <li class="nav-item">
       <a class="nav-link" data-widget="pushmenu" href="#"><i class="fas fa-bars"></i></a>
@@ -9,9 +8,9 @@
     </li>
   </ul>
 
-  <!-- Right navbar -->
-  <ul class="navbar-nav ml-auto"> {{-- Gunakan ml-auto jika pakai Bootstrap 4 --}}
-    <!-- User Dropdown -->
+
+  <ul class="navbar-nav ml-auto">
+    @auth
     <li class="nav-item dropdown">
       <a class="nav-link d-flex align-items-center" data-toggle="dropdown" href="#" role="button">
         <img src="{{ Auth::user()->profile_picture ?? asset('assets/img/backgrounds/logos.png') }}" 
@@ -20,7 +19,8 @@
         <span class="ml-2">{{ Auth::user()->fullname ?? Auth::user()->username }}</span>
         <i class="fas fa-caret-down ml-1"></i>
       </a>
-      <div class="dropdown-menu dropdown-menu-right"> {{-- dropdown ke kanan --}}
+      <div class="dropdown-menu dropdown-menu-right">
+        
         {{-- <a href="{{ route('profile.edit') }}" class="dropdown-item">
           <i class="fas fa-user me-2"></i> Profil
         </a>
@@ -34,5 +34,17 @@
         </form>
       </div>
     </li>
+    @endauth
+
+    
+    @guest
+<li class="nav-item">
+  <a href="{{ route('login') }}" class="nav-link text-warning" style="font-weight: 500;">
+    <i class="fas fa-exclamation-circle mr-1"></i>
+    Sesi Anda telah berakhir. Silakan login kembali.
+  </a>
+</li>
+@endguest
+
   </ul>
 </nav>
