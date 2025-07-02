@@ -51,11 +51,11 @@
     // Route::put('/rawatinap/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatinap.update_status');
     // Route::put('/rawatjalan/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])->name('rawatjalan.update_status');
     Route::put('/rawatjalan/{no_rawat}/update-status', [RawatJalanController::class, 'updateStatus'])
-    ->where('no_rawat', '.*')
-    ->name('rawatjalan.update_status');
+        ->where('no_rawat', '.*')
+        ->name('rawatjalan.update_status');
     Route::put('/rawatinap/{no_rawat}/update-status', [RawatInapController::class, 'updateStatus'])
-    ->where('no_rawat', '.*')
-    ->name('rawatinap.update_status');
+        ->where('no_rawat', '.*')
+        ->name('rawatinap.update_status');
 
     // Untuk rawat inap
     Route::get('/rawatinap/statusklaim/{no_rawat}', [RawatInapController::class, 'lihatResume'])
@@ -80,7 +80,6 @@
 
     Route::get('/bpjs/rawatjalan', [RawatJalanController::class, 'indexBpjs'])->name('rawatjalan.index_bpjs');
     Route::get('/bpjs/rawatinap', [RawatInapController::class, 'indexBpjs'])->name('rawatinap.index_bpjs');
-
 
     Route::middleware('auth')->group(function () {
         Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
