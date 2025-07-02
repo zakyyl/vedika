@@ -16,9 +16,11 @@ class RawatJalanController extends Controller
     public function index(Request $request)
     {
         $page = $request->get('page', 1);
+        $isFiltered = $request->filled('search') || ($request->filled('tgl_dari') && $request->filled('tgl_sampai'));
+
         $cacheKey = 'rawatjalan_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
 
-        $rawatJalan = Cache::remember($cacheKey, 300, function () use ($request) {
+        $rawatJalan = Cache::remember($cacheKey, 300, function () use ($request, $isFiltered) {
             $query = DB::table('reg_periksa')
                 ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
                 ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
@@ -34,7 +36,8 @@ class RawatJalanController extends Controller
                     'bridging_sep.no_sep'
                 )
                 ->where('reg_periksa.kd_pj', 'BP1')
-                ->where('reg_periksa.status_lanjut', 'ralan');
+                ->where('reg_periksa.status_lanjut', 'ralan')
+                ->where('reg_periksa.status_bayar', 'Sudah Bayar');
 
             if ($request->filled('search')) {
                 $search = $request->search;
@@ -46,6 +49,9 @@ class RawatJalanController extends Controller
 
             if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
                 $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+            } elseif (!$request->filled('search')) {
+                $query->whereMonth('reg_periksa.tgl_registrasi', now()->month)
+                    ->whereYear('reg_periksa.tgl_registrasi', now()->year);
             }
 
             return $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
@@ -54,24 +60,30 @@ class RawatJalanController extends Controller
                 ->withQueryString();
         });
 
+        $total = Cache::remember("rawatjalan_total_" . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai']))), 300, function () use ($request) {
+            $query = DB::table('reg_periksa')
+                ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
+                ->where('kd_pj', 'BP1')
+                ->where('status_lanjut', 'ralan')
+                ->where('reg_periksa.status_bayar', 'Sudah Bayar');
 
-
-        $total = DB::table('reg_periksa')
-            ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
-            ->where('kd_pj', 'BP1')
-            ->where('status_lanjut', 'ralan')
-            ->when($request->filled('search'), function ($q) use ($request) {
+            if ($request->filled('search')) {
                 $search = $request->search;
-                return $q->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('reg_periksa.no_rawat', 'like', "%{$search}%")
                         ->orWhere('bridging_sep.no_sep', 'like', "%{$search}%");
                 });
-            })
-            ->when($request->filled('tgl_dari') && $request->filled('tgl_sampai'), function ($q) use ($request) {
-                return $q->whereBetween('tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
-            })
-            ->count();
+            }
 
+            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+                $query->whereBetween('tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+            } elseif (!$request->filled('search')) {
+                $query->whereMonth('tgl_registrasi', now()->month)
+                    ->whereYear('tgl_registrasi', now()->year);
+            }
+
+            return $query->count();
+        });
 
         return view('rawatjalan.index', [
             'rawatJalan' => $rawatJalan,
@@ -79,12 +91,15 @@ class RawatJalanController extends Controller
         ]);
     }
 
+
+
     public function indexBpjs(Request $request)
     {
         $page = $request->get('page', 1);
-        $cacheKey = 'bpjs_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
+        $isFiltered = $request->filled('search') || ($request->filled('tgl_dari') && $request->filled('tgl_sampai'));
+        $cacheKey = 'bpjs_ralan_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
 
-        $bpjs = Cache::remember($cacheKey, 300, function () use ($request) {
+        $bpjs = Cache::remember($cacheKey, 300, function () use ($request, $isFiltered) {
             $query = DB::table('mlite_vedika')
                 ->select(
                     'id',
@@ -97,7 +112,8 @@ class RawatJalanController extends Controller
                     'status',
                     'username',
                     'catatan'
-                );
+                )
+                ->where('jenis', '2');
 
             if ($request->filled('search')) {
                 $search = $request->search;
@@ -110,6 +126,9 @@ class RawatJalanController extends Controller
 
             if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
                 $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
+            } elseif (!$request->filled('search')) {
+                $query->whereMonth('tanggal', now()->month)
+                    ->whereYear('tanggal', now()->year);
             }
 
             return $query->orderBy('tanggal', 'desc')
@@ -118,25 +137,35 @@ class RawatJalanController extends Controller
                 ->withQueryString();
         });
 
-        $total = DB::table('mlite_vedika')
-            ->when($request->filled('search'), function ($q) use ($request) {
+        $total = Cache::remember('bpjs_ralan_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai']))), 300, function () use ($request) {
+            $query = DB::table('mlite_vedika')
+                ->where('jenis', '2');
+
+            if ($request->filled('search')) {
                 $search = $request->search;
-                return $q->where(function ($q) use ($search) {
+                $query->where(function ($q) use ($search) {
                     $q->where('no_rawat', 'like', "%{$search}%")
                         ->orWhere('nosep', 'like', "%{$search}%")
                         ->orWhere('no_rkm_medis', 'like', "%{$search}%");
                 });
-            })
-            ->when($request->filled('tgl_dari') && $request->filled('tgl_sampai'), function ($q) use ($request) {
-                return $q->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
-            })
-            ->count();
+            }
+
+            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+                $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
+            } elseif (!$request->filled('search')) {
+                $query->whereMonth('tanggal', now()->month)
+                    ->whereYear('tanggal', now()->year);
+            }
+
+            return $query->count();
+        });
 
         return view('bpjs.rawatjalan.index', [
             'bpjs' => $bpjs,
             'total' => $total,
         ]);
     }
+
 
 
     //     public function detail($no_rawat)
@@ -505,6 +534,63 @@ class RawatJalanController extends Controller
 
 
 
+    // public function uploadResume(Request $request, $no_rawat)
+    // {
+    //     $request->validate([
+    //         'kode' => 'required|exists:master_berkas_digital,kode',
+    //         'file' => 'required|file|mimes:pdf,jpg,jpeg|max:2048',
+    //     ]);
+
+    //     try {
+    //         if ($request->hasFile('file')) {
+    //             $file = $request->file('file');
+
+    //             if (!Storage::disk('public')->exists('pages/upload')) {
+    //                 Storage::disk('public')->makeDirectory('pages/upload');
+    //             }
+
+    //             $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+    //             $path = $file->storeAs('pages/upload', $filename, 'public');
+
+    //             if (!Storage::disk('public')->exists($path)) {
+    //                 throw new \Exception('File gagal disimpan ke storage');
+    //             }
+
+    //             Log::info('File uploaded successfully', [
+    //                 'filename' => $filename,
+    //                 'path' => $path,
+    //                 'full_path' => Storage::disk('public')->path($path),
+    //                 'no_rawat' => $no_rawat
+    //             ]);
+    //             DB::table('berkas_digital_perawatan')->insert([
+    //                 'no_rawat' => $no_rawat,
+    //                 'kode' => $request->kode,
+    //                 'lokasi_file' => $path,
+
+    //             ]);
+
+    //             Cache::forget("berkas_digital_$no_rawat");
+    //             Cache::forget("rawatjalan_detail_$no_rawat");
+
+    //             return back()->with('success', 'Resume keperawatan berhasil diunggah ke: ' . $path);
+    //         }
+
+    //         return back()->with('error', 'File tidak ditemukan.');
+    //     } catch (\Exception $e) {
+    //         Log::error('Upload error: ' . $e->getMessage(), [
+    //             'no_rawat' => $no_rawat,
+    //             'file_info' => $request->hasFile('file') ? [
+    //                 'original_name' => $request->file('file')->getClientOriginalName(),
+    //                 'size' => $request->file('file')->getSize(),
+    //                 'mime_type' => $request->file('file')->getMimeType()
+    //             ] : 'No file'
+    //         ]);
+
+    //         return back()->with('error', 'Gagal mengunggah file: ' . $e->getMessage());
+    //     }
+    // }
+
     public function uploadResume(Request $request, $no_rawat)
     {
         $request->validate([
@@ -516,35 +602,28 @@ class RawatJalanController extends Controller
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
 
-                if (!Storage::disk('public')->exists('pages/upload')) {
-                    Storage::disk('public')->makeDirectory('pages/upload');
+                $uploadPath = base_path('../ERMV1/berkasrawat/pages/upload');
+
+                if (!file_exists($uploadPath)) {
+                    mkdir($uploadPath, 0777, true);
                 }
 
                 $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
 
-                $path = $file->storeAs('pages/upload', $filename, 'public');
+                $file->move($uploadPath, $filename);
 
-                if (!Storage::disk('public')->exists($path)) {
-                    throw new \Exception('File gagal disimpan ke storage');
-                }
+                $relativePath = 'berkasrawat/pages/upload/' . $filename;
 
-                Log::info('File uploaded successfully', [
-                    'filename' => $filename,
-                    'path' => $path,
-                    'full_path' => Storage::disk('public')->path($path),
-                    'no_rawat' => $no_rawat
-                ]);
                 DB::table('berkas_digital_perawatan')->insert([
                     'no_rawat' => $no_rawat,
                     'kode' => $request->kode,
-                    'lokasi_file' => $path,
-
+                    'lokasi_file' => $relativePath,
                 ]);
 
                 Cache::forget("berkas_digital_$no_rawat");
                 Cache::forget("rawatjalan_detail_$no_rawat");
 
-                return back()->with('success', 'Resume keperawatan berhasil diunggah ke: ' . $path);
+                return back()->with('success', 'Resume keperawatan berhasil diunggah ke: ' . $relativePath);
             }
 
             return back()->with('error', 'File tidak ditemukan.');
@@ -561,6 +640,27 @@ class RawatJalanController extends Controller
             return back()->with('error', 'Gagal mengunggah file: ' . $e->getMessage());
         }
     }
+    public function hapusResume($id)
+    {
+        $berkas = DB::table('berkas_digital_perawatan')->where('id', $id)->first();
+
+        if (!$berkas) {
+            return back()->with('error', 'Berkas tidak ditemukan.');
+        }
+
+        $filePath = public_path($berkas->lokasi_file);
+        if (file_exists($filePath)) {
+            unlink($filePath);
+        }
+
+        DB::table('berkas_digital_perawatan')->where('id', $id)->delete();
+
+        Cache::forget("berkas_digital_{$berkas->no_rawat}");
+        Cache::forget("rawatjalan_detail_{$berkas->no_rawat}");
+
+        return back()->with('success', 'Berkas berhasil dihapus.');
+    }
+
 
     public function updateStatus(Request $request, $no_rawat)
     {
