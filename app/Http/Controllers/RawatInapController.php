@@ -330,6 +330,12 @@ class RawatInapController extends Controller
 
         $readonly = Auth::user()->roles === 'bpjs';
 
+        $billing = $this->getBillingData($no_rawat);
+
+        $totalBilling = $billing->sum(function ($item) {
+            return (float) $item->totalbiaya;
+        });
+
         return view('rawatinap.detail', compact(
             'data',
             'kategori',
@@ -347,7 +353,25 @@ class RawatInapController extends Controller
             'vedikaData',
             'readonly',
             'sepData',
+            'billing',
+            'totalBilling'
         ));
+    }
+
+        private function getBillingData($no_rawat)
+    {
+        return DB::table('billing')
+            ->select(
+                'no',
+                'nm_perawatan',
+                'pemisah',
+                DB::raw("IF(biaya=0,'',biaya) as biaya"),
+                DB::raw("IF(jumlah=0,'',jumlah) as jumlah"),
+                DB::raw("IF(tambahan=0,'',tambahan) as tambahan"),
+                DB::raw("IF(totalbiaya=0,'',totalbiaya) as totalbiaya")
+            )
+            ->where('no_rawat', $no_rawat)
+            ->get();
     }
 
     private function getRegistrationData($no_rawat)
@@ -528,29 +552,52 @@ class RawatInapController extends Controller
         try {
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
+                $timestamp = now()->format('YmdHis');
+                $extension = $file->getClientOriginalExtension();
+                $kode = $request->kode;
 
-                $uploadPath = base_path('../ERMV1/berkasrawat/pages/upload');
+                $berkas = DB::table('master_berkas_digital')->where('kode', $kode)->first();
+                $namaKode = $berkas ? $berkas->nama : $kode;
 
-                if (!file_exists($uploadPath)) {
-                    mkdir($uploadPath, 0777, true);
-                }
+                $rawFilename = "{$namaKode}_{$no_rawat}_{$timestamp}.{$extension}";
 
-                $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+                $safeFilename = str_replace('/', '__', $rawFilename);
 
-                $file->move($uploadPath, $filename);
 
-                $relativePath = 'berkasrawat/pages/upload/' . $filename;
-
-                DB::table('berkas_digital_perawatan')->insert([
+                $postData = [
+                    'file' => new \CURLFile($file->getPathname(), $file->getMimeType(), $safeFilename),
+                    'filename' => $rawFilename,
+                    'kode' => $kode,
                     'no_rawat' => $no_rawat,
-                    'kode' => $request->kode,
-                    'lokasi_file' => $relativePath,
-                ]);
+                ];
 
-                Cache::forget("berkas_digital_$no_rawat");
-                Cache::forget("rawatinap_detail_$no_rawat");
+                $ch = curl_init();
+                curl_setopt($ch, CURLOPT_URL, 'http://192.168.1.33/ERMV1/berkasrawat/pages/upload/upload.php');
+                curl_setopt($ch, CURLOPT_POST, true);
+                curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
 
-                return back()->with('success', 'Resume keperawatan berhasil diunggah ke: ' . $relativePath);
+                $response = curl_exec($ch);
+                $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                $curlError = curl_error($ch);
+                curl_close($ch);
+
+                if ($httpCode === 200 && str_contains($response, 'Upload sukses')) {
+                    $relativePath = 'berkasrawat/pages/upload/' . $safeFilename;
+
+                    DB::table('berkas_digital_perawatan')->insert([
+                        'no_rawat' => $no_rawat,
+                        'kode' => $kode,
+                        'lokasi_file' => $relativePath,
+                    ]);
+
+                    Cache::forget("berkas_digital_$no_rawat");
+                    Cache::forget("rawatinap_detail_$no_rawat");
+
+                    return back()->with('success', 'Resume keperawatan berhasil diunggah ke server: ' . $rawFilename);
+                } else {
+                    return back()->with('error', 'Gagal mengunggah ke server. Respon: ' . $response . ' | Error: ' . $curlError);
+                }
             }
 
             return back()->with('error', 'File tidak ditemukan.');
@@ -567,6 +614,8 @@ class RawatInapController extends Controller
             return back()->with('error', 'Gagal mengunggah file: ' . $e->getMessage());
         }
     }
+
+
 
 
     public function updateStatus(Request $request, $no_rawat)
