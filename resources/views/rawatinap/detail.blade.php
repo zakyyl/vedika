@@ -24,14 +24,14 @@
         </div>
     </div>
     <section class="content px-3">
-        @if($data)
-            @if(session('success'))
+        @if ($data)
+            @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
                     {{ session('success') }}
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
                 </div>
             @endif
-            @if(session('error'))
+            @if (session('error'))
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
                     {{ session('error') }}
                     <button type="button" class="close" data-dismiss="alert">&times;</button>
@@ -56,11 +56,12 @@
             @include('rawatjalan.partials.tindakan')
             @include('rawatjalan.partials.operasi')
             @include('rawatjalan.partials.radiologi')
-            
+            @include('rawatjalan.partials.billing')
+
             <div class="card">
                 <div class="card-footer">
-                    <a href="{{ route('rawatinap.index') }}" class="btn btn-default">
-                        <i class="fas fa-arrow-left"></i> Kembali ke daftar
+                    <a href="{{ url()->previous() }}" class="btn btn-default">
+                        <i class="fas fa-arrow-left"></i> Kembali
                     </a>
                 </div>
             </div>
