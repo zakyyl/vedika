@@ -33,8 +33,8 @@
                                     <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
                                         <p class="mb-1"><strong>Diagnosa:</strong> {{ $skdp->diagnosa }}</p>
                                         <p class="mb-1"><strong>Terapi:</strong> {{ $skdp->terapi }}</p>
-                                        <p class="mb-1"><strong>STATUS :</strong><br>
-                                            Belum dapat dikembalikan ke Fasilitas Perujuk dengan alasan<br>
+                                        <p class="mb-1"><br>
+                                            <strong>Belum dapat dikembalikan ke Fasilitas Perujuk dengan alasan</strong><br>
                                             1. {{ $skdp->alasan1 ?? '-' }}<br>
                                             2. {{ $skdp->alasan2 ?? '-' }}
                                         </p>
