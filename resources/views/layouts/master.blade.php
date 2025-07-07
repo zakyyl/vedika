@@ -30,10 +30,9 @@
 <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>
 <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('adminlte/dist/js/adminlte.min.js') }}"></script>
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
+@yield('scripts')
 
-@yield('scripts') 
 
 <style>
     .rotate-icon {
@@ -49,6 +48,29 @@
     padding-top: 0.25rem;
     padding-bottom: 0.25rem;
 }
+.timeline {
+    position: relative;
+    padding-left: 25px;
+    border-left: 2px solid #ccc;
+}
+.timeline-item {
+    position: relative;
+}
+.timeline-point {
+    position: absolute;
+    left: -13px;
+    top: 5px;
+    width: 25px;
+    height: 25px;
+    line-height: 25px;
+    border-radius: 50%;
+    background-color: #17a2b8;
+    font-size: 14px;
+}
+.timeline-content {
+    margin-left: 20px;
+}
+
 
 </style>
 
