@@ -221,7 +221,7 @@ class RawatJalanController extends Controller
             return (float) $item->totalbiaya;
         });
 
-        $readonly = Auth::user()->roles === 'bpjs';
+        $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
 
         return view('rawatjalan.detail', compact(
             'data',

@@ -209,7 +209,7 @@ private function getRawatInapTotal(Request $request)
         $vedikaData = $this->getVedikaData($no_rawat);
         $sepData = $this->getSepData($no_rawat);
 
-        $readonly = Auth::user()->roles === 'bpjs';
+        $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
 
         $billing = $this->getBillingData($no_rawat);
 
