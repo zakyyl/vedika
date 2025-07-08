@@ -221,6 +221,10 @@ class RawatJalanController extends Controller
             return (float) $item->totalbiaya;
         });
 
+        $laboratorium = $this->getPemeriksaanLaboratorium($no_rawat);
+
+        $pemberian_obat = $this->getPemberianObat($no_rawat);
+
         $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
 
         return view('rawatjalan.detail', compact(
@@ -241,9 +245,105 @@ class RawatJalanController extends Controller
             'readonly',
             'sepData',
             'billing',
-            'totalBilling'
+            'totalBilling',
+            'laboratorium',
+            'pemberian_obat'
         ));
     }
+
+
+
+    private function getPemberianObat($no_rawat)
+{
+    return DB::table('detail_pemberian_obat')
+        ->join('databarang', 'detail_pemberian_obat.kode_brng', '=', 'databarang.kode_brng')
+        ->select(
+            'detail_pemberian_obat.tgl_perawatan',
+            'detail_pemberian_obat.jam',
+            'databarang.nama_brng',
+            'detail_pemberian_obat.jml',
+            'detail_pemberian_obat.total'
+        )
+        ->where('detail_pemberian_obat.no_rawat', $no_rawat)
+        ->orderBy('detail_pemberian_obat.tgl_perawatan', 'desc')
+        ->orderBy('detail_pemberian_obat.jam', 'desc')
+        ->get();
+}
+
+
+    private function getPemeriksaanLaboratorium($no_rawat)
+    {
+        $pasien = DB::table('reg_periksa')
+            ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
+            ->where('reg_periksa.no_rawat', $no_rawat)
+            ->select('pasien.jk', 'pasien.tgl_lahir')
+            ->first();
+
+        if (!$pasien) {
+            return [];
+        }
+
+        $umur = \Carbon\Carbon::parse($pasien->tgl_lahir)->age;
+
+        $hasilLab = DB::table('periksa_lab')
+            ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw', '=', 'periksa_lab.kd_jenis_prw')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'periksa_lab.kd_dokter')
+            ->select(
+                'periksa_lab.no_rawat',
+                'periksa_lab.tgl_periksa',
+                'periksa_lab.jam',
+                'jns_perawatan_lab.nm_perawatan',
+                'jns_perawatan_lab.kd_jenis_prw',
+                'dokter.nm_dokter'
+            )
+            ->where('periksa_lab.no_rawat', $no_rawat)
+            ->orderBy('periksa_lab.tgl_periksa', 'desc')
+            ->orderBy('periksa_lab.jam', 'desc')
+            ->get();
+
+        $pemeriksaan_laboratorium = [];
+
+        foreach ($hasilLab as $row) {
+            $detail = DB::table('detail_periksa_lab')
+                ->join('template_laboratorium', 'template_laboratorium.id_template', '=', 'detail_periksa_lab.id_template')
+                ->select(
+                    'template_laboratorium.Pemeriksaan',
+                    'detail_periksa_lab.nilai',
+                    'template_laboratorium.satuan',
+                    'template_laboratorium.nilai_rujukan_ld',
+                    'template_laboratorium.nilai_rujukan_la',
+                    'template_laboratorium.nilai_rujukan_pd',
+                    'template_laboratorium.nilai_rujukan_pa'
+                )
+                ->where('detail_periksa_lab.no_rawat', $no_rawat)
+                ->where('detail_periksa_lab.kd_jenis_prw', $row->kd_jenis_prw)
+                ->whereDate('detail_periksa_lab.tgl_periksa', $row->tgl_periksa)
+                ->whereTime('detail_periksa_lab.jam', $row->jam)
+                ->get()
+                ->map(function ($item) use ($pasien, $umur) {
+                    if ($umur <= 12) {
+                        $item->nilai_rujukan = $pasien->jk === 'L' ? $item->nilai_rujukan_pd : $item->nilai_rujukan_pa;
+                    } else {
+                        $item->nilai_rujukan = $pasien->jk === 'L' ? $item->nilai_rujukan_ld : $item->nilai_rujukan_la;
+                    }
+                    return $item;
+                })
+                ->toArray();
+
+            $pemeriksaan_laboratorium[] = [
+                'no_rawat' => $row->no_rawat,
+                'tgl_periksa' => $row->tgl_periksa,
+                'jam' => $row->jam,
+                'nm_perawatan' => $row->nm_perawatan,
+                'nm_dokter' => $row->nm_dokter,
+                'detail_periksa_lab' => $detail,
+            ];
+        }
+
+        return $pemeriksaan_laboratorium;
+    }
+
+
 
     private function getBillingData($no_rawat)
     {

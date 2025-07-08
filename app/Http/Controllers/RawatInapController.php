@@ -13,104 +13,104 @@ class RawatInapController extends Controller
 {
 
     public function index(Request $request)
-{
-    $page = $request->get('page', 1);
+    {
+        $page = $request->get('page', 1);
 
-    // Default ke hari ini jika tidak ada filter
-    if (!$request->filled('tgl_dari') && !$request->filled('tgl_sampai') && !$request->filled('search')) {
-        $request->merge([
-            'tgl_dari' => now()->toDateString(),
-            'tgl_sampai' => now()->toDateString(),
+        // Default ke hari ini jika tidak ada filter
+        if (!$request->filled('tgl_dari') && !$request->filled('tgl_sampai') && !$request->filled('search')) {
+            $request->merge([
+                'tgl_dari' => now()->toDateString(),
+                'tgl_sampai' => now()->toDateString(),
+            ]);
+        }
+
+        $isFiltered = $request->filled('search') || ($request->filled('tgl_dari') && $request->filled('tgl_sampai'));
+
+        $queryKey = 'rawatinap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
+
+        $rawatInap = $isFiltered
+            ? $this->getRawatInapData($request)
+            : Cache::remember($queryKey, 60, fn() => $this->getRawatInapData($request));
+
+        $totalKey = 'rawatinap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])));
+
+        $total = $isFiltered
+            ? $this->getRawatInapTotal($request)
+            : Cache::remember($totalKey, 60, fn() => $this->getRawatInapTotal($request));
+
+        return view('rawatinap.index', [
+            'rawatInap' => $rawatInap,
+            'total' => $total,
         ]);
     }
 
-    $isFiltered = $request->filled('search') || ($request->filled('tgl_dari') && $request->filled('tgl_sampai'));
+    private function getRawatInapData(Request $request)
+    {
+        $query = DB::table('reg_periksa')
+            ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
+            ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
+            ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
+            ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
+            ->select(
+                'reg_periksa.no_rawat',
+                'reg_periksa.tgl_registrasi',
+                'dokter.nm_dokter',
+                'reg_periksa.no_rkm_medis',
+                'pasien.nm_pasien',
+                'poliklinik.nm_poli',
+                'bridging_sep.no_sep'
+            )
+            ->where('reg_periksa.kd_pj', 'BP1')
+            ->where('reg_periksa.status_lanjut', 'ranap')
+            ->where('reg_periksa.status_bayar', 'Sudah Bayar');
 
-    $queryKey = 'rawatinap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('reg_periksa.no_rawat', 'like', "%{$search}%")
+                    ->orWhere('reg_periksa.no_rkm_medis', 'like', "%{$search}%")
+                    ->orWhere('bridging_sep.no_sep', 'like', "%{$search}%");
+            });
+        }
 
-    $rawatInap = $isFiltered
-        ? $this->getRawatInapData($request)
-        : Cache::remember($queryKey, 60, fn() => $this->getRawatInapData($request));
+        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+        } elseif (!$request->filled('search')) {
+            $query->whereMonth('reg_periksa.tgl_registrasi', now()->month)
+                ->whereYear('reg_periksa.tgl_registrasi', now()->year);
+        }
 
-    $totalKey = 'rawatinap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])));
-
-    $total = $isFiltered
-        ? $this->getRawatInapTotal($request)
-        : Cache::remember($totalKey, 60, fn() => $this->getRawatInapTotal($request));
-
-    return view('rawatinap.index', [
-        'rawatInap' => $rawatInap,
-        'total' => $total,
-    ]);
-}
-
-private function getRawatInapData(Request $request)
-{
-    $query = DB::table('reg_periksa')
-        ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
-        ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
-        ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
-        ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
-        ->select(
-            'reg_periksa.no_rawat',
-            'reg_periksa.tgl_registrasi',
-            'dokter.nm_dokter',
-            'reg_periksa.no_rkm_medis',
-            'pasien.nm_pasien',
-            'poliklinik.nm_poli',
-            'bridging_sep.no_sep'
-        )
-        ->where('reg_periksa.kd_pj', 'BP1')
-        ->where('reg_periksa.status_lanjut', 'ranap')
-        ->where('reg_periksa.status_bayar', 'Sudah Bayar');
-
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('reg_periksa.no_rawat', 'like', "%{$search}%")
-                ->orWhere('reg_periksa.no_rkm_medis', 'like', "%{$search}%")
-                ->orWhere('bridging_sep.no_sep', 'like', "%{$search}%");
-        });
+        return $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
+            ->orderBy('reg_periksa.jam_reg', 'desc')
+            ->paginate(25)
+            ->withQueryString();
     }
 
-    if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
-        $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
-    } elseif (!$request->filled('search')) {
-        $query->whereMonth('reg_periksa.tgl_registrasi', now()->month)
-            ->whereYear('reg_periksa.tgl_registrasi', now()->year);
+    private function getRawatInapTotal(Request $request)
+    {
+        $query = DB::table('reg_periksa')
+            ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
+            ->where('reg_periksa.kd_pj', 'BP1')
+            ->where('reg_periksa.status_lanjut', 'ranap')
+            ->where('reg_periksa.status_bayar', 'Sudah Bayar');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('reg_periksa.no_rawat', 'like', "%{$search}%")
+                    ->orWhere('bridging_sep.no_sep', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
+        } elseif (!$request->filled('search')) {
+            $query->whereMonth('reg_periksa.tgl_registrasi', now()->month)
+                ->whereYear('reg_periksa.tgl_registrasi', now()->year);
+        }
+
+        return $query->count();
     }
-
-    return $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
-        ->orderBy('reg_periksa.jam_reg', 'desc')
-        ->paginate(25)
-        ->withQueryString();
-}
-
-private function getRawatInapTotal(Request $request)
-{
-    $query = DB::table('reg_periksa')
-        ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
-        ->where('reg_periksa.kd_pj', 'BP1')
-        ->where('reg_periksa.status_lanjut', 'ranap')
-        ->where('reg_periksa.status_bayar', 'Sudah Bayar');
-
-    if ($request->filled('search')) {
-        $search = $request->search;
-        $query->where(function ($q) use ($search) {
-            $q->where('reg_periksa.no_rawat', 'like', "%{$search}%")
-                ->orWhere('bridging_sep.no_sep', 'like', "%{$search}%");
-        });
-    }
-
-    if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
-        $query->whereBetween('reg_periksa.tgl_registrasi', [$request->tgl_dari, $request->tgl_sampai]);
-    } elseif (!$request->filled('search')) {
-        $query->whereMonth('reg_periksa.tgl_registrasi', now()->month)
-            ->whereYear('reg_periksa.tgl_registrasi', now()->year);
-    }
-
-    return $query->count();
-}
 
 
 
@@ -153,7 +153,7 @@ private function getRawatInapTotal(Request $request)
             ->paginate(25)
             ->withQueryString();
 
-        $totalKey = 'bpjs_ralan_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])) . '_jenis_2');
+        $totalKey = 'bpjs_ranap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])) . '_jenis_2');
         $total = Cache::remember($totalKey, 60, function () use ($request) {
             $query = DB::table('mlite_vedika')
                 ->where('jenis', '1')
@@ -209,13 +209,20 @@ private function getRawatInapTotal(Request $request)
         $vedikaData = $this->getVedikaData($no_rawat);
         $sepData = $this->getSepData($no_rawat);
 
-        $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
 
         $billing = $this->getBillingData($no_rawat);
 
         $totalBilling = $billing->sum(function ($item) {
             return (float) $item->totalbiaya;
         });
+
+        $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
+
+        $laboratorium = $this->getPemeriksaanLaboratorium($no_rawat);
+
+        $pemberian_obat = $this->getPemberianObat($no_rawat);
+
+        $dpjp_ranap = $this->getDpjp($no_rawat);
 
         return view('rawatinap.detail', compact(
             'data',
@@ -235,11 +242,130 @@ private function getRawatInapTotal(Request $request)
             'readonly',
             'sepData',
             'billing',
-            'totalBilling'
+            'totalBilling',
+            'laboratorium',
+            'pemberian_obat',
+            'dpjp_ranap'
         ));
     }
 
-        private function getBillingData($no_rawat)
+    private function getDpjp($no_rawat)
+    {
+        $rows_dpjp_ranap = DB::table('dpjp_ranap')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'dpjp_ranap.kd_dokter')
+            ->where('dpjp_ranap.no_rawat', $no_rawat)
+            ->select('dpjp_ranap.kd_dokter', 'dokter.nm_dokter')
+            ->get();
+
+        $dpjp_i = 1;
+        $dpjp_ranap = [];
+
+        foreach ($rows_dpjp_ranap as $row) {
+            $dpjp_ranap[] = [
+                'nomor' => $dpjp_i++,
+                'kd_dokter' => $row->kd_dokter,
+                'nm_dokter' => $row->nm_dokter,
+            ];
+        }
+
+        return $dpjp_ranap;
+    }
+
+
+
+
+    private function getPemberianObat($no_rawat)
+    {
+        return DB::table('detail_pemberian_obat')
+            ->join('databarang', 'detail_pemberian_obat.kode_brng', '=', 'databarang.kode_brng')
+            ->select(
+                'detail_pemberian_obat.tgl_perawatan',
+                'detail_pemberian_obat.jam',
+                'databarang.nama_brng',
+                'detail_pemberian_obat.jml',
+                'detail_pemberian_obat.total'
+            )
+            ->where('detail_pemberian_obat.no_rawat', $no_rawat)
+            ->orderBy('detail_pemberian_obat.tgl_perawatan', 'desc')
+            ->orderBy('detail_pemberian_obat.jam', 'desc')
+            ->get();
+    }
+
+    private function getPemeriksaanLaboratorium($no_rawat)
+    {
+
+        $pasien = DB::table('reg_periksa')
+            ->join('pasien', 'pasien.no_rkm_medis', '=', 'reg_periksa.no_rkm_medis')
+            ->where('reg_periksa.no_rawat', $no_rawat)
+            ->select('pasien.jk', 'pasien.tgl_lahir')
+            ->first();
+
+        if (!$pasien) {
+            return [];
+        }
+
+
+        $umur = \Carbon\Carbon::parse($pasien->tgl_lahir)->age;
+
+        $hasilLab = DB::table('periksa_lab')
+            ->join('jns_perawatan_lab', 'jns_perawatan_lab.kd_jenis_prw', '=', 'periksa_lab.kd_jenis_prw')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'periksa_lab.kd_dokter')
+            ->select(
+                'periksa_lab.no_rawat',
+                'periksa_lab.tgl_periksa',
+                'periksa_lab.jam',
+                'jns_perawatan_lab.nm_perawatan',
+                'jns_perawatan_lab.kd_jenis_prw',
+                'dokter.nm_dokter'
+            )
+            ->where('periksa_lab.no_rawat', $no_rawat)
+            ->orderBy('periksa_lab.tgl_periksa', 'desc')
+            ->orderBy('periksa_lab.jam', 'desc')
+            ->get();
+
+        $pemeriksaan_laboratorium = [];
+
+        foreach ($hasilLab as $row) {
+            $detail = DB::table('detail_periksa_lab')
+                ->join('template_laboratorium', 'template_laboratorium.id_template', '=', 'detail_periksa_lab.id_template')
+                ->select(
+                    'template_laboratorium.Pemeriksaan',
+                    'detail_periksa_lab.nilai',
+                    'template_laboratorium.satuan',
+                    'template_laboratorium.nilai_rujukan_ld',
+                    'template_laboratorium.nilai_rujukan_la',
+                    'template_laboratorium.nilai_rujukan_pd',
+                    'template_laboratorium.nilai_rujukan_pa'
+                )
+                ->where('detail_periksa_lab.no_rawat', $no_rawat)
+                ->where('detail_periksa_lab.kd_jenis_prw', $row->kd_jenis_prw)
+                ->whereDate('detail_periksa_lab.tgl_periksa', $row->tgl_periksa)
+                ->whereTime('detail_periksa_lab.jam', $row->jam)
+                ->get()
+                ->map(function ($item) use ($pasien, $umur) {
+                    if ($umur <= 12) {
+                        $item->nilai_rujukan = $pasien->jk === 'L' ? $item->nilai_rujukan_pd : $item->nilai_rujukan_pa;
+                    } else {
+                        $item->nilai_rujukan = $pasien->jk === 'L' ? $item->nilai_rujukan_ld : $item->nilai_rujukan_la;
+                    }
+                    return $item;
+                })
+                ->toArray();
+
+            $pemeriksaan_laboratorium[] = [
+                'no_rawat' => $row->no_rawat,
+                'tgl_periksa' => $row->tgl_periksa,
+                'jam' => $row->jam,
+                'nm_perawatan' => $row->nm_perawatan,
+                'nm_dokter' => $row->nm_dokter,
+                'detail_periksa_lab' => $detail,
+            ];
+        }
+
+        return $pemeriksaan_laboratorium;
+    }
+
+    private function getBillingData($no_rawat)
     {
         return DB::table('billing')
             ->select(
@@ -299,22 +425,23 @@ private function getRawatInapTotal(Request $request)
         });
     }
 
+    
 
     private function getPemeriksaanData($no_rawat)
     {
-        return DB::table('pemeriksaan_ralan')
-            ->join('reg_periksa', 'pemeriksaan_ralan.no_rawat', '=', 'reg_periksa.no_rawat')
+        return DB::table('pemeriksaan_ranap')
+            ->join('reg_periksa', 'pemeriksaan_ranap.no_rawat', '=', 'reg_periksa.no_rawat')
             ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
             ->join('dokter', 'reg_periksa.kd_dokter', '=', 'dokter.kd_dokter')
             ->select(
-                'pemeriksaan_ralan.*',
+                'pemeriksaan_ranap.*',
                 'reg_periksa.no_rkm_medis',
                 'pasien.nm_pasien',
                 'dokter.nm_dokter'
             )
-            ->where('pemeriksaan_ralan.no_rawat', $no_rawat)
-            ->orderBy('pemeriksaan_ralan.tgl_perawatan', 'desc')
-            ->orderBy('pemeriksaan_ralan.jam_rawat', 'desc')
+            ->where('pemeriksaan_ranap.no_rawat', $no_rawat)
+            ->orderBy('pemeriksaan_ranap.tgl_perawatan', 'desc')
+            ->orderBy('pemeriksaan_ranap.jam_rawat', 'desc')
             ->get();
     }
 
@@ -498,57 +625,57 @@ private function getRawatInapTotal(Request $request)
 
 
     public function updateStatus(Request $request, $no_rawat)
-{
-    $request->validate([
-        'status' => 'required|in:Pengajuan,Perbaiki,Disetujui',
-        'catatan' => 'nullable|string',
-        'no_rkm_medis' => 'required|string',
-        'tgl_registrasi' => 'required|date',
-        'nosep' => 'nullable|string',
-        'jenis' => 'required|in:Ralan,Ranap',
-    ]);
+    {
+        $request->validate([
+            'status' => 'required|in:Pengajuan,Perbaiki,Disetujui',
+            'catatan' => 'nullable|string',
+            'no_rkm_medis' => 'required|string',
+            'tgl_registrasi' => 'required|date',
+            'nosep' => 'nullable|string',
+            'jenis' => 'required|in:Ralan,Ranap',
+        ]);
 
-    try {
-        DB::beginTransaction();
+        try {
+            DB::beginTransaction();
 
-        $existing = DB::table('mlite_vedika')->where('no_rawat', $no_rawat)->first();
+            $existing = DB::table('mlite_vedika')->where('no_rawat', $no_rawat)->first();
 
-        if (!$existing) {
-            DB::table('mlite_vedika')->insert([
-                'tanggal' => now()->format('Y-m-d'),
-                'no_rkm_medis' => $request->no_rkm_medis,
-                'no_rawat' => $no_rawat,
-                'tgl_registrasi' => $request->tgl_registrasi,
+            if (!$existing) {
+                DB::table('mlite_vedika')->insert([
+                    'tanggal' => now()->format('Y-m-d'),
+                    'no_rkm_medis' => $request->no_rkm_medis,
+                    'no_rawat' => $no_rawat,
+                    'tgl_registrasi' => $request->tgl_registrasi,
+                    'nosep' => $request->nosep,
+                    'jenis' => $request->jenis,
+                    'status' => $request->status,
+                    'catatan' => $request->catatan,
+                    'username' => Auth::user()->username ?? 'system',
+                ]);
+            } else {
+                DB::table('mlite_vedika')->where('no_rawat', $no_rawat)->update([
+                    'status' => $request->status,
+                    'catatan' => $request->catatan,
+                    'tanggal' => now()->format('Y-m-d'),
+                ]);
+            }
+
+            DB::table('mlite_vedika_feedback')->insert([
                 'nosep' => $request->nosep,
-                'jenis' => $request->jenis,
-                'status' => $request->status,
+                'tanggal' => now()->format('Y-m-d'),
                 'catatan' => $request->catatan,
                 'username' => Auth::user()->username ?? 'system',
             ]);
-        } else {
-            DB::table('mlite_vedika')->where('no_rawat', $no_rawat)->update([
-                'status' => $request->status,
-                'catatan' => $request->catatan,
-                'tanggal' => now()->format('Y-m-d'),
-            ]);
+
+            DB::commit();
+            Cache::forget("vedika_data_$no_rawat");
+
+            return back()->with('success', 'Status klaim berhasil diperbarui.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperbarui status klaim: ' . $e->getMessage());
         }
-
-        DB::table('mlite_vedika_feedback')->insert([
-            'nosep' => $request->nosep,
-            'tanggal' => now()->format('Y-m-d'),
-            'catatan' => $request->catatan,
-            'username' => Auth::user()->username ?? 'system',
-        ]);
-
-        DB::commit();
-        Cache::forget("vedika_data_$no_rawat");
-
-        return back()->with('success', 'Status klaim berhasil diperbarui.');
-    } catch (\Exception $e) {
-        DB::rollBack();
-        return back()->with('error', 'Gagal memperbarui status klaim: ' . $e->getMessage());
     }
-}
 
     public function lihatResume($no_rawat)
     {
