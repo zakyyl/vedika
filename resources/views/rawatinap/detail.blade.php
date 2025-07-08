@@ -53,10 +53,12 @@
             @include('rawatinap.partials.pemeriksaan', ['data' => $pemeriksaan])
             @include('rawatinap.partials.surat_kontrol')
             @include('rawatinap.partials.modal_update')
-            @include('rawatjalan.partials.tindakan')
-            @include('rawatjalan.partials.operasi')
-            @include('rawatjalan.partials.radiologi')
-            @include('rawatjalan.partials.billing')
+            @include('rawatinap.partials.tindakan')
+            @include('rawatinap.partials.operasi')
+            @include('rawatinap.partials.radiologi')
+            @include('rawatinap.partials.hasil_labor')
+            @include('rawatinap.partials.pemberian_obat')
+            @include('rawatinap.partials.billing')
 
             <div class="card">
                 <div class="card-footer">

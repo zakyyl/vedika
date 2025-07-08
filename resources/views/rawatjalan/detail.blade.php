@@ -57,6 +57,8 @@
             @include('rawatjalan.partials.tindakan')
             @include('rawatjalan.partials.operasi')
             @include('rawatjalan.partials.radiologi')
+            @include('rawatjalan.partials.hasil_labor')
+            @include('rawatjalan.partials.pemberian_obat')
             @include('rawatjalan.partials.billing')
             
             <div class="card">
