@@ -46,7 +46,6 @@
                     </table>
                 </div>
 
-                {{-- Kolom kanan: DPJP --}}
                 <div class="col-md-6">
                     <h6 class="mb-2">Dokter Penanggung Jawab (DPJP):</h6>
                     @if (!empty($dpjp_ranap))

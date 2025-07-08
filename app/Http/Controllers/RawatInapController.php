@@ -224,6 +224,8 @@ class RawatInapController extends Controller
 
         $dpjp_ranap = $this->getDpjp($no_rawat);
 
+        $laboratorium_pa = $this->getLaboratoriumPA($no_rawat);
+
         return view('rawatinap.detail', compact(
             'data',
             'kategori',
@@ -245,9 +247,20 @@ class RawatInapController extends Controller
             'totalBilling',
             'laboratorium',
             'pemberian_obat',
-            'dpjp_ranap'
+            'dpjp_ranap',
+            'laboratorium_pa'
         ));
     }
+
+    private function getLaboratoriumPA($no_rawat)
+    {
+        return DB::table('detail_periksa_labpa')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tgl_periksa', 'desc')
+            ->orderBy('jam', 'desc')
+            ->get();
+    }
+
 
     private function getDpjp($no_rawat)
     {
@@ -270,9 +283,6 @@ class RawatInapController extends Controller
 
         return $dpjp_ranap;
     }
-
-
-
 
     private function getPemberianObat($no_rawat)
     {

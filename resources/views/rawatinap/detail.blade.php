@@ -57,6 +57,7 @@
             @include('rawatinap.partials.operasi')
             @include('rawatinap.partials.radiologi')
             @include('rawatinap.partials.hasil_labor')
+            @include('rawatinap.partials.labpa')
             @include('rawatinap.partials.pemberian_obat')
             @include('rawatinap.partials.billing')
 
