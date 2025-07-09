@@ -226,6 +226,12 @@ class RawatInapController extends Controller
 
         $laboratorium_pa = $this->getLaboratoriumPA($no_rawat);
 
+        $resep_pulang = $this->getResepPulang($no_rawat);
+
+        $hasil_usg = $this->getHasilUSG($no_rawat);
+        $hasil_usg_gynecologi = $this->getHasilUSGGynecologi($no_rawat);
+        $hasil_echo = $this->getHasilEcho($no_rawat);
+
         return view('rawatinap.detail', compact(
             'data',
             'kategori',
@@ -248,9 +254,60 @@ class RawatInapController extends Controller
             'laboratorium',
             'pemberian_obat',
             'dpjp_ranap',
-            'laboratorium_pa'
+            'laboratorium_pa',
+            'resep_pulang',
+            'hasil_usg',
+            'hasil_usg_gynecologi',
+            'hasil_echo',
+            
         ));
     }
+
+
+        private function getHasilUSG($no_rawat)
+    {
+        return DB::table('hasil_pemeriksaan_usg')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+    }
+
+    private function getHasilUSGGynecologi($no_rawat)
+    {
+        return DB::table('hasil_pemeriksaan_usg_gynecologi')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+    }
+
+    private function getHasilEcho($no_rawat)
+    {
+        return DB::table('hasil_pemeriksaan_echo')
+            ->join('dokter', 'dokter.kd_dokter', '=', 'hasil_pemeriksaan_echo.kd_dokter')
+            ->select('hasil_pemeriksaan_echo.*', 'dokter.nm_dokter')
+            ->where('hasil_pemeriksaan_echo.no_rawat', $no_rawat)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+    }
+
+
+    private function getResepPulang($no_rawat)
+    {
+        return DB::table('resep_pulang')
+            ->join('databarang', 'resep_pulang.kode_brng', '=', 'databarang.kode_brng')
+            ->select(
+                'resep_pulang.tanggal',
+                'resep_pulang.jam',
+                'databarang.nama_brng',
+                'resep_pulang.jml_barang as jml'
+            )
+            ->where('resep_pulang.no_rawat', $no_rawat)
+            ->orderBy('resep_pulang.tanggal', 'desc')
+            ->orderBy('resep_pulang.jam', 'desc')
+            ->get();
+    }
+
+
 
     private function getLaboratoriumPA($no_rawat)
     {
@@ -554,11 +611,12 @@ class RawatInapController extends Controller
 
     private function getSepData($no_rawat)
     {
-        return DB::table('bridging_sep')->where('no_rawat', $no_rawat)->first();
-        // return Cache::remember("sep_data_$no_rawat", 10, function () use ($no_rawat) {
-        //     return DB::table('bridging_sep')->where('no_rawat', $no_rawat)->first();
-        // });
+        return DB::table('bridging_sep')
+            ->where('no_rawat', $no_rawat)
+            ->orderByDesc('no_sep') 
+            ->first();
     }
+
 
     public function uploadResume(Request $request, $no_rawat)
     {
@@ -628,7 +686,6 @@ class RawatInapController extends Controller
                     'mime_type' => $request->file('file')->getMimeType()
                 ] : 'No file'
             ]);
-
             return back()->with('error', 'Gagal mengunggah file: ' . $e->getMessage());
         }
     }
@@ -670,12 +727,19 @@ class RawatInapController extends Controller
                 ]);
             }
 
+            $latestNosep = DB::table('bridging_sep')
+            ->where('no_rawat', $no_rawat)
+            ->orderByDesc('no_sep') 
+            ->value('no_sep') ?? $request->nosep;
+
+
             DB::table('mlite_vedika_feedback')->insert([
-                'nosep' => $request->nosep,
+                'nosep' => $latestNosep,
                 'tanggal' => now()->format('Y-m-d'),
                 'catatan' => $request->catatan,
                 'username' => Auth::user()->username ?? 'system',
             ]);
+
 
             DB::commit();
             Cache::forget("vedika_data_$no_rawat");

@@ -227,6 +227,10 @@ class RawatJalanController extends Controller
 
         $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
 
+        $hasil_usg = $this->getHasilUSG($no_rawat);
+        $hasil_usg_gynecologi = $this->getHasilUSGGynecologi($no_rawat);
+        $hasil_echo = $this->getHasilEcho($no_rawat);
+
         return view('rawatjalan.detail', compact(
             'data',
             'kategori',
@@ -247,11 +251,39 @@ class RawatJalanController extends Controller
             'billing',
             'totalBilling',
             'laboratorium',
-            'pemberian_obat'
+            'pemberian_obat',
+            'hasil_usg',
+            'hasil_usg_gynecologi',
+            'hasil_echo',
         ));
     }
 
+    
+            private function getHasilUSG($no_rawat)
+        {
+            return DB::table('hasil_pemeriksaan_usg')
+                ->where('no_rawat', $no_rawat)
+                ->orderBy('tanggal', 'asc')
+                ->get();
+        }
 
+        private function getHasilUSGGynecologi($no_rawat)
+        {
+            return DB::table('hasil_pemeriksaan_usg_gynecologi')
+                ->where('no_rawat', $no_rawat)
+                ->orderBy('tanggal', 'asc')
+                ->get();
+        }
+
+        private function getHasilEcho($no_rawat)
+        {
+            return DB::table('hasil_pemeriksaan_echo')
+                ->join('dokter', 'dokter.kd_dokter', '=', 'hasil_pemeriksaan_echo.kd_dokter')
+                ->select('hasil_pemeriksaan_echo.*', 'dokter.nm_dokter')
+                ->where('hasil_pemeriksaan_echo.no_rawat', $no_rawat)
+                ->orderBy('tanggal', 'asc')
+                ->get();
+        }
 
     private function getPemberianObat($no_rawat)
 {
@@ -522,15 +554,15 @@ class RawatJalanController extends Controller
     }
 
 
-    private function getSepData($no_rawat)
-    {
-        return DB::table('bridging_sep')->where('no_rawat', $no_rawat)->first();
-        // return Cache::remember("sep_data_$no_rawat", 10, function () use ($no_rawat) {
-        //     return DB::table('bridging_sep')->where('no_rawat', $no_rawat)->first();
-        // });
-    }
+        private function getSepData($no_rawat)
+            {
+                return DB::table('bridging_sep')
+                    ->where('no_rawat', $no_rawat)
+                    ->orderByDesc('no_sep') 
+                    ->first();
+            }
 
-    public function uploadResume(Request $request, $no_rawat)
+public function uploadResume(Request $request, $no_rawat)
     {
         $request->validate([
             'kode' => 'required|exists:master_berkas_digital,kode',
