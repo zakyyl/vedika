@@ -25,22 +25,30 @@
                     </div>
                     <div class="form-group">
                         <label>No. SEP</label>
-                        <input type="text" class="form-control" value="{{ $no_sep ?? 'Belum ada data SEP' }}"
-                            readonly>
+                        @if ($sepData && $sepData->no_sep)
+                            <input type="text" class="form-control" value="{{ $sepData->no_sep }}" readonly>
+                        @else
+                            <input type="text" class="form-control" value="Belum ada data SEP" readonly>
+                        @endif
                     </div>
                     <div class="form-group">
                         <label for="status">Status Klaim <span class="text-danger">*</span></label>
+                        @php
+                            $currentStatus = $vedikaData->status ?? null;
+                            $userRole = Auth::user()->roles ?? 'guest';
+
+                            $allowedStatus = match ($userRole) {
+                                'bpjs' => ['Perbaiki', 'Disetujui'],
+                                'casemix' => ['Pengajuan'],
+                                default => ['Pengajuan', 'Perbaiki', 'Disetujui'],
+                            };
+                        @endphp
+
                         <select name="status" id="status" class="form-control" required>
-                            @php
-                                $statusOptions = ['Pengajuan', 'Perbaiki', 'Disetujui'];
-                                $currentStatus = $vedikaData->status ?? null;
-                            @endphp
+                            <option value="" disabled {{ !$currentStatus ? 'selected' : '' }}>-- Pilih Status --
+                            </option>
 
-                            @if (!$currentStatus)
-                                <option value="" selected disabled>-- Pilih Status --</option>
-                            @endif
-
-                            @foreach ($statusOptions as $status)
+                            @foreach ($allowedStatus as $status)
                                 <option value="{{ $status }}" {{ $currentStatus == $status ? 'selected' : '' }}>
                                     {{ $status }}
                                 </option>
@@ -48,10 +56,12 @@
                         </select>
                     </div>
 
+
                     <div class="form-group">
                         <label>Catatan</label>
                         <textarea name="catatan" class="form-control" rows="4" placeholder="Masukkan catatan...">{{ isset($vedikaData) ? $vedikaData->catatan : '' }}</textarea>
                     </div>
+
                     @if (isset($vedikaData) && ($vedikaData->status || $vedikaData->catatan))
                         <div class="alert alert-info">
                             <h6>Informasi Status Klaim:</h6>
@@ -68,10 +78,18 @@
                             <p><strong>Perhatian:</strong> Belum ada data status klaim. Status baru akan dibuat.</p>
                         </div>
                     @endif
+
+                    @if (!$sepData || !$sepData->no_sep)
+                        <div class="alert alert-danger">
+                            <p><strong>Peringatan:</strong> Pasien ini belum memiliki nomor SEP. Pastikan nomor SEP
+                                sudah dibuat sebelum melakukan update status klaim.</p>
+                        </div>
+                    @endif
                 </div>
+
                 <input type="hidden" name="no_rkm_medis" value="{{ $data->no_rkm_medis }}">
                 <input type="hidden" name="tgl_registrasi" value="{{ $data->tgl_registrasi }}">
-                <input type="hidden" name="nosep" value="{{ $no_sep }}">
+                <input type="hidden" name="nosep" value="{{ $sepData->no_sep }}">
                 <input type="hidden" name="jenis" value="Ranap">
 
                 <div class="modal-footer">

@@ -19,7 +19,6 @@ class RawatJalanController extends Controller
     {
         $page = $request->get('page', 1);
 
-
         if (!$request->filled('tgl_dari') && !$request->filled('tgl_sampai') && !$request->filled('search')) {
             $request->merge([
                 'tgl_dari' => now()->toDateString(),
@@ -211,9 +210,13 @@ class RawatJalanController extends Controller
         $tindakan_radiologi = $this->getTindakanRadiologi($no_rawat);
         $hasil_radiologi = $this->getHasilRadiologi($no_rawat);
 
-        $no_sep = $this->getNoSep($no_rawat);
-        $vedikaData = $this->getVedikaData($no_rawat);
+        // Ambil data SEP terbaru untuk konsistensi
         $sepData = $this->getSepData($no_rawat);
+        $no_sep = $sepData ? $sepData->no_sep : null;
+
+
+        $vedikaData = $this->getVedikaData($no_rawat);
+
 
         $billing = $this->getBillingData($no_rawat);
 
@@ -659,20 +662,28 @@ public function uploadResume(Request $request, $no_rawat)
         return back()->with('success', 'Berkas berhasil dihapus.');
     }
 
-
-    public function updateStatus(Request $request, $no_rawat)
+public function updateStatus(Request $request, $no_rawat)
     {
         $request->validate([
             'status' => 'required|in:Pengajuan,Perbaiki,Disetujui',
             'catatan' => 'nullable|string',
             'no_rkm_medis' => 'required|string',
             'tgl_registrasi' => 'required|date',
-            'nosep' => 'nullable|string',
             'jenis' => 'required|in:Ralan,Ranap',
         ]);
 
         try {
             DB::beginTransaction();
+
+        
+            $latestNosep = DB::table('bridging_sep')
+                ->where('no_rawat', $no_rawat)
+                ->orderByDesc('no_sep') 
+                ->value('no_sep');
+
+            if (!$latestNosep) {
+                $latestNosep = null;
+            }
 
             $existing = DB::table('mlite_vedika')->where('no_rawat', $no_rawat)->first();
 
@@ -682,7 +693,7 @@ public function uploadResume(Request $request, $no_rawat)
                     'no_rkm_medis' => $request->no_rkm_medis,
                     'no_rawat' => $no_rawat,
                     'tgl_registrasi' => $request->tgl_registrasi,
-                    'nosep' => $request->nosep,
+                    'nosep' => $latestNosep,
                     'jenis' => $request->jenis,
                     'status' => $request->status,
                     'catatan' => $request->catatan,
@@ -692,16 +703,19 @@ public function uploadResume(Request $request, $no_rawat)
                 DB::table('mlite_vedika')->where('no_rawat', $no_rawat)->update([
                     'status' => $request->status,
                     'catatan' => $request->catatan,
+                    'nosep' => $latestNosep, 
                     'tanggal' => now()->format('Y-m-d'),
                 ]);
             }
 
-            DB::table('mlite_vedika_feedback')->insert([
-                'nosep' => $request->nosep,
-                'tanggal' => now()->format('Y-m-d'),
-                'catatan' => $request->catatan,
-                'username' => Auth::user()->username ?? 'system',
-            ]);
+            if ($latestNosep) {
+                DB::table('mlite_vedika_feedback')->insert([
+                    'nosep' => $latestNosep,
+                    'tanggal' => now()->format('Y-m-d'),
+                    'catatan' => $request->catatan,
+                    'username' => Auth::user()->username ?? 'system',
+                ]);
+            }
 
             DB::commit();
             Cache::forget("vedika_data_$no_rawat");
@@ -712,7 +726,6 @@ public function uploadResume(Request $request, $no_rawat)
             return back()->with('error', 'Gagal memperbarui status klaim: ' . $e->getMessage());
         }
     }
-
 
 
     public function lihatResume($no_rawat)
