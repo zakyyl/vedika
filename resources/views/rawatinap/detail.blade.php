@@ -56,9 +56,11 @@
             @include('rawatinap.partials.tindakan')
             @include('rawatinap.partials.operasi')
             @include('rawatinap.partials.radiologi')
+            @include('rawatinap.partials.hasil_usg')
             @include('rawatinap.partials.hasil_labor')
             @include('rawatinap.partials.labpa')
             @include('rawatinap.partials.pemberian_obat')
+            @include('rawatinap.partials.resep_pulang')
             @include('rawatinap.partials.billing')
 
             <div class="card">
