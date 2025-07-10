@@ -90,7 +90,7 @@
                 <input type="hidden" name="no_rkm_medis" value="{{ $data->no_rkm_medis }}">
                 <input type="hidden" name="tgl_registrasi" value="{{ $data->tgl_registrasi }}">
                 <input type="hidden" name="nosep" value="{{ $sepData->no_sep }}">
-                <input type="hidden" name="jenis" value="rajal">
+                <input type="hidden" name="jenis" value="Ralan">
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>
