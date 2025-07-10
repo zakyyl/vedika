@@ -233,6 +233,8 @@ class RawatJalanController extends Controller
         $hasil_usg = $this->getHasilUSG($no_rawat);
         $hasil_usg_gynecologi = $this->getHasilUSGGynecologi($no_rawat);
         $hasil_echo = $this->getHasilEcho($no_rawat);
+        $hasil_ekg = $this->getHasilEKG($no_rawat);
+
 
         return view('rawatjalan.detail', compact(
             'data',
@@ -258,8 +260,17 @@ class RawatJalanController extends Controller
             'hasil_usg',
             'hasil_usg_gynecologi',
             'hasil_echo',
+            'hasil_ekg',
         ));
     }
+
+    private function getHasilEKG($no_rawat)
+{
+    return DB::table('hasil_pemeriksaan_ekg')
+        ->where('no_rawat', $no_rawat)
+        ->orderBy('tanggal', 'asc')
+        ->get();
+}
 
     
             private function getHasilUSG($no_rawat)

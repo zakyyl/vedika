@@ -111,8 +111,6 @@ class RawatInapController extends Controller
         return $query->count();
     }
 
-
-
     public function indexBpjs(Request $request)
     {
         $page = $request->get('page', 1);
@@ -181,87 +179,6 @@ class RawatInapController extends Controller
         ]);
     }
 
-    // public function detail($no_rawat)
-    // {
-    //     $data = $this->getRegistrationData($no_rawat);
-
-    //     if (!$data) {
-    //         abort(404, 'Data rawat inap tidak ditemukan');
-    //     }
-
-    //     $kategori = $this->getMasterBerkasDigital();
-    //     $berkas = $this->getBerkasDigital($no_rawat);
-    //     $pemeriksaan = $this->getPemeriksaanData($no_rawat);
-    //     $suratKontrol = $this->getSuratKontrol($data->no_rkm_medis);
-
-    //     $rawatDr = $this->getRawatDokter($no_rawat);
-    //     $rawatPr = $this->getRawatPerawat($no_rawat);
-    //     $rawatDrPr = $this->getRawatDokterPerawat($no_rawat);
-
-    //     $operasi = $this->getOperasiData($no_rawat);
-    //     $laporanOperasi = $this->getLaporanOperasi($no_rawat);
-
-    //     $tindakan_radiologi = $this->getTindakanRadiologi($no_rawat);
-    //     $hasil_radiologi = $this->getHasilRadiologi($no_rawat);
-
-    //     $no_sep = $this->getNoSep($no_rawat);
-    //     $vedikaData = $this->getVedikaData($no_rawat);
-    //     $sepData = $this->getSepData($no_rawat);
-
-
-    //     $billing = $this->getBillingData($no_rawat);
-
-    //     $totalBilling = $billing->sum(function ($item) {
-    //         return (float) $item->totalbiaya;
-    //     });
-
-    //     $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
-
-    //     $laboratorium = $this->getPemeriksaanLaboratorium($no_rawat);
-
-    //     $pemberian_obat = $this->getPemberianObat($no_rawat);
-
-    //     $dpjp_ranap = $this->getDpjp($no_rawat);
-
-    //     $laboratorium_pa = $this->getLaboratoriumPA($no_rawat);
-
-    //     $resep_pulang = $this->getResepPulang($no_rawat);
-
-    //     $hasil_usg = $this->getHasilUSG($no_rawat);
-    //     $hasil_usg_gynecologi = $this->getHasilUSGGynecologi($no_rawat);
-    //     $hasil_echo = $this->getHasilEcho($no_rawat);
-
-    //     return view('rawatinap.detail', compact(
-    //         'data',
-    //         'kategori',
-    //         'berkas',
-    //         'pemeriksaan',
-    //         'suratKontrol',
-    //         'rawatDr',
-    //         'rawatPr',
-    //         'rawatDrPr',
-    //         'operasi',
-    //         'laporanOperasi',
-    //         'tindakan_radiologi',
-    //         'hasil_radiologi',
-    //         'no_sep',
-    //         'vedikaData',
-    //         'readonly',
-    //         'sepData',
-    //         'billing',
-    //         'totalBilling',
-    //         'laboratorium',
-    //         'pemberian_obat',
-    //         'dpjp_ranap',
-    //         'laboratorium_pa',
-    //         'resep_pulang',
-    //         'hasil_usg',
-    //         'hasil_usg_gynecologi',
-    //         'hasil_echo',
-            
-    //     ));
-    // }
-
     public function detail($no_rawat)
     {
         $data = $this->getRegistrationData($no_rawat);
@@ -307,6 +224,7 @@ class RawatInapController extends Controller
         $hasil_usg = $this->getHasilUSG($no_rawat);
         $hasil_usg_gynecologi = $this->getHasilUSGGynecologi($no_rawat);
         $hasil_echo = $this->getHasilEcho($no_rawat);
+        $hasil_ekg = $this->getHasilEKG($no_rawat);
 
         return view('rawatinap.detail', compact(
             'data',
@@ -335,8 +253,17 @@ class RawatInapController extends Controller
             'hasil_usg',
             'hasil_usg_gynecologi',
             'hasil_echo',
+            'hasil_ekg',
         ));
     }
+
+    private function getHasilEKG($no_rawat)
+{
+    return DB::table('hasil_pemeriksaan_ekg')
+        ->where('no_rawat', $no_rawat)
+        ->orderBy('tanggal', 'asc')
+        ->get();
+}
 
 
         private function getHasilUSG($no_rawat)
@@ -381,8 +308,6 @@ class RawatInapController extends Controller
             ->orderBy('resep_pulang.jam', 'desc')
             ->get();
     }
-
-
 
     private function getLaboratoriumPA($no_rawat)
     {
@@ -601,12 +526,12 @@ class RawatInapController extends Controller
 
     private function getRawatDokter($no_rawat)
     {
-        return DB::table('rawat_jl_dr')
-            ->join('jns_perawatan', 'rawat_jl_dr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
-            ->join('dokter', 'rawat_jl_dr.kd_dokter', '=', 'dokter.kd_dokter')
-            ->where('rawat_jl_dr.no_rawat', $no_rawat)
-            ->select('rawat_jl_dr.*', 'jns_perawatan.nm_perawatan', 'dokter.nm_dokter')
-            ->get();
+        return DB::table('rawat_inap_dr')
+    ->join('jns_perawatan', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
+    ->leftJoin('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter') 
+    ->where('rawat_inap_dr.no_rawat', $no_rawat)
+    ->select('rawat_inap_dr.*', 'jns_perawatan.nm_perawatan', 'dokter.nm_dokter')
+    ->get();
     }
 
 

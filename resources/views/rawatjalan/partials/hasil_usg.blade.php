@@ -1,4 +1,5 @@
 <div class="accordion mt-3" id="accordionPemeriksaanUSG">
+    {{-- HASIL USG --}}
     <div class="card shadow-sm">
         <div class="card-header py-2 px-3" id="headingUSG">
             <h5 class="mb-0" style="font-size: 1rem;">
@@ -53,6 +54,7 @@
         </div>
     </div>
 
+    {{-- USG GYNECOLOGI --}}
     <div class="card shadow-sm">
         <div class="card-header py-2 px-3" id="headingGynecologi">
             <h5 class="mb-0" style="font-size: 1rem;">
@@ -94,6 +96,7 @@
         </div>
     </div>
 
+    {{-- ECHO --}}
     <div class="card shadow-sm">
         <div class="card-header py-2 px-3" id="headingEcho">
             <h5 class="mb-0" style="font-size: 1rem;">
@@ -152,4 +155,56 @@
         </div>
     </div>
 
+    {{-- EKG --}}
+    <div class="card shadow-sm">
+        <div class="card-header py-2 px-3" id="headingEKG">
+            <h5 class="mb-0" style="font-size: 1rem;">
+                <button class="btn btn-link w-100 text-left text-dark" type="button" data-toggle="collapse"
+                    data-target="#collapseEKG" aria-expanded="false" aria-controls="collapseEKG">
+                    <strong>Hasil Pemeriksaan EKG</strong>
+                    <i class="fas fa-chevron-down ml-2 rotate-icon"></i>
+                </button>
+            </h5>
+        </div>
+        <div id="collapseEKG" class="collapse" aria-labelledby="headingEKG" data-parent="#accordionPemeriksaanUSG">
+            <div class="card-body p-2">
+                @if (!empty($hasil_ekg) && count($hasil_ekg) > 0)
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-sm table-hover">
+                            <thead class="table-light text-center align-middle">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Dokter</th>
+                                    <th>Irama</th>
+                                    <th>Rate</th>
+                                    <th>Axis</th>
+                                    <th>Hiper</th>
+                                    <th>Iskemia</th>
+                                    <th>Lain</th>
+                                    <th>Kesimpulan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($hasil_ekg as $item)
+                                    <tr>
+                                        <td class="text-nowrap text-center">{{ \Carbon\Carbon::parse($item->tanggal)->format('d M Y H:i') }}</td>
+                                        <td>{{ $item->kd_dokter ?? '-' }}</td>
+                                        <td>{{ $item->irama ?? '-' }}</td>
+                                        <td>{{ $item->rate ?? '-' }}</td>
+                                        <td>{{ $item->axis ?? '-' }}</td>
+                                        <td>{{ $item->hiper ?? '-' }}</td>
+                                        <td>{{ $item->iskemia ?? '-' }}</td>
+                                        <td>{{ $item->lain ?? '-' }}</td>
+                                        <td><small class="text-muted">{{ $item->kesimpulan ?? '-' }}</small></td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @else
+                    <div class="alert alert-info m-0"><i class="fas fa-info-circle"></i> Tidak ada hasil pemeriksaan EKG.</div>
+                @endif
+            </div>
+        </div>
+    </div>
 </div>
