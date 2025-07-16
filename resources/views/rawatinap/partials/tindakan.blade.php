@@ -3,7 +3,7 @@
         <div class="card-header py-2 px-3" id="headingDataTindakan">
             <h5 class="mb-0" style="font-size: 1rem;">
                 <button class="btn btn-link w-100 text-left text-dark" type="button" data-toggle="collapse"
-                    data-target="#collapseDataTindakan" aria-expanded="true" aria-controls="collapseDataTindakan">
+                    data-target="#collapseDataTindakan" aria-expanded="false" aria-controls="collapseDataTindakan">
                     <strong>Data Tindakan</strong>
                     <i class="fas fa-chevron-down ml-2 rotate-icon"></i>
                 </button>
@@ -13,16 +13,13 @@
         <div id="collapseDataTindakan" class="collapse" aria-labelledby="headingDataTindakan"
             data-parent="#accordionDataTindakan">
             <div class="card-body px-2 py-3">
-
-                {{-- Nested Accordion --}}
                 <div class="accordion" id="tindakanAccordion">
 
-                    {{-- Dokter --}}
                     <div class="card shadow-sm">
                         <div class="card-header py-2 px-3" id="headingDokter">
                             <h5 class="mb-0" style="font-size: 1rem;">
                                 <button class="btn btn-link p-0 w-100 text-left" type="button" data-toggle="collapse"
-                                    data-target="#collapseDokter" aria-expanded="true" aria-controls="collapseDokter">
+                                    data-target="#collapseDokter" aria-expanded="false" aria-controls="collapseDokter">
                                     Tindakan oleh Dokter
                                 </button>
                             </h5>
@@ -30,9 +27,9 @@
                         <div id="collapseDokter" class="collapse show" aria-labelledby="headingDokter"
                             data-parent="#tindakanAccordion">
                             <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
-                                @if ($rawatDr->count())
+                                @if ($rawat_inap_dr->count())
                                     <ul class="list-group">
-                                        @foreach ($rawatDr as $item)
+                                        @foreach ($rawat_inap_dr as $item)
                                             <li class="list-group-item d-flex justify-content-between align-items-start">
                                                 <div>
                                                     <div><strong>{{ $item->nm_dokter }}</strong> - {{ $item->nm_perawatan }}</div>
@@ -49,7 +46,6 @@
                         </div>
                     </div>
 
-                    {{-- Petugas --}}
                     <div class="card shadow-sm mt-2">
                         <div class="card-header py-2 px-3" id="headingPetugas">
                             <h5 class="mb-0" style="font-size: 1rem;">
@@ -63,12 +59,12 @@
                         <div id="collapsePetugas" class="collapse" aria-labelledby="headingPetugas"
                             data-parent="#tindakanAccordion">
                             <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
-                                @if ($rawatPr->count())
+                                @if ($rawat_inap_pr->count())
                                     <ul class="list-group">
-                                        @foreach ($rawatPr as $item)
+                                        @foreach ($rawat_inap_pr as $item)
                                             <li class="list-group-item d-flex justify-content-between align-items-start">
                                                 <div>
-                                                    <div><strong>{{ $item->nama_petugas }}</strong> - {{ $item->nm_perawatan }}</div>
+                                                    <div><strong>{{ $item->nama }}</strong> - {{ $item->nm_perawatan }}</div>
                                                     <small class="text-muted">{{ $item->tgl_perawatan }} {{ $item->jam_rawat }}</small>
                                                 </div>
                                                 <span class="badge bg-primary">Rp{{ number_format($item->biaya_rawat, 0, ',', '.') }}</span>
@@ -82,7 +78,6 @@
                         </div>
                     </div>
 
-                    {{-- Dokter & Petugas --}}
                     <div class="card shadow-sm mt-2">
                         <div class="card-header py-2 px-3" id="headingGabungan">
                             <h5 class="mb-0" style="font-size: 1rem;">
@@ -96,13 +91,13 @@
                         <div id="collapseGabungan" class="collapse" aria-labelledby="headingGabungan"
                             data-parent="#tindakanAccordion">
                             <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
-                                @if ($rawatDrPr->count())
+                                @if ($rawat_inap_drpr->count())
                                     <ul class="list-group">
-                                        @foreach ($rawatDrPr as $item)
+                                        @foreach ($rawat_inap_drpr as $item)
                                             <li class="list-group-item d-flex justify-content-between align-items-start">
                                                 <div>
                                                     <div>
-                                                        <strong>{{ $item->nm_dokter }}</strong> & <strong>{{ $item->nama_petugas }}</strong>
+                                                        <strong>{{ $item->nm_dokter }}</strong> & <strong>{{ $item->nama }}</strong>
                                                         <br>{{ $item->nm_perawatan }}
                                                     </div>
                                                     <small class="text-muted">{{ $item->tgl_perawatan }} {{ $item->jam_rawat }}</small>
@@ -118,8 +113,7 @@
                         </div>
                     </div>
 
-                </div> {{-- end nested accordion --}}
-
+                </div>
             </div>
         </div>
     </div>

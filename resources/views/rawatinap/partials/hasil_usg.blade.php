@@ -1,5 +1,4 @@
 <div class="accordion mt-3" id="accordionPemeriksaanUSG">
-    {{-- HASIL USG --}}
     <div class="card shadow-sm">
         <div class="card-header py-2 px-3" id="headingUSG">
             <h5 class="mb-0" style="font-size: 1rem;">
@@ -54,7 +53,6 @@
         </div>
     </div>
 
-    {{-- USG GYNECOLOGI --}}
     <div class="card shadow-sm">
         <div class="card-header py-2 px-3" id="headingGynecologi">
             <h5 class="mb-0" style="font-size: 1rem;">
@@ -95,8 +93,6 @@
             </div>
         </div>
     </div>
-
-    {{-- ECHO --}}
     <div class="card shadow-sm">
         <div class="card-header py-2 px-3" id="headingEcho">
             <h5 class="mb-0" style="font-size: 1rem;">
@@ -155,7 +151,6 @@
         </div>
     </div>
 
-    {{-- EKG --}}
     <div class="card shadow-sm">
         <div class="card-header py-2 px-3" id="headingEKG">
             <h5 class="mb-0" style="font-size: 1rem;">
