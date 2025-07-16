@@ -226,6 +226,11 @@ class RawatInapController extends Controller
         $hasil_echo = $this->getHasilEcho($no_rawat);
         $hasil_ekg = $this->getHasilEKG($no_rawat);
 
+        $rawat_inap_dr = $this->getRawatInapDokter($no_rawat);
+$rawat_inap_pr = $this->getRawatInapPerawat($no_rawat);
+$rawat_inap_drpr = $this->getRawatInapDokterPerawat($no_rawat);
+
+
         return view('rawatinap.detail', compact(
             'data',
             'kategori',
@@ -254,8 +259,48 @@ class RawatInapController extends Controller
             'hasil_usg_gynecologi',
             'hasil_echo',
             'hasil_ekg',
+            'rawat_inap_dr',
+            'rawat_inap_pr',
+            'rawat_inap_drpr',
+
         ));
     }
+
+
+    private function getRawatInapDokter($no_rawat)
+{
+    return DB::table('rawat_inap_dr')
+        ->join('jns_perawatan_inap', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
+        ->join('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter')
+        ->where('rawat_inap_dr.no_rawat', $no_rawat)
+        ->select('rawat_inap_dr.*', 'jns_perawatan_inap.nm_perawatan', 'dokter.nm_dokter')
+        ->orderBy('rawat_inap_dr.tgl_perawatan')
+        ->get();
+}
+
+private function getRawatInapPerawat($no_rawat)
+{
+    return DB::table('rawat_inap_pr')
+        ->join('jns_perawatan_inap', 'rawat_inap_pr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
+        ->join('petugas', 'rawat_inap_pr.nip', '=', 'petugas.nip')
+        ->where('rawat_inap_pr.no_rawat', $no_rawat)
+        ->select('rawat_inap_pr.*', 'jns_perawatan_inap.nm_perawatan', 'petugas.nama')
+        ->orderBy('rawat_inap_pr.tgl_perawatan')
+        ->get();
+}
+
+private function getRawatInapDokterPerawat($no_rawat)
+{
+    return DB::table('rawat_inap_drpr')
+        ->join('jns_perawatan_inap', 'rawat_inap_drpr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
+        ->join('dokter', 'rawat_inap_drpr.kd_dokter', '=', 'dokter.kd_dokter')
+        ->join('petugas', 'rawat_inap_drpr.nip', '=', 'petugas.nip')
+        ->where('rawat_inap_drpr.no_rawat', $no_rawat)
+        ->select('rawat_inap_drpr.*', 'jns_perawatan_inap.nm_perawatan', 'dokter.nm_dokter', 'petugas.nama')
+        ->orderBy('rawat_inap_drpr.tgl_perawatan')
+        ->get();
+}
+
 
     private function getHasilEKG($no_rawat)
 {
