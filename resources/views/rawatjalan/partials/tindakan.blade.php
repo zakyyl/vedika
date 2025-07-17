@@ -23,7 +23,7 @@
                                 </button>
                             </h5>
                         </div>
-                        <div id="collapseDokter" class="collapse show" aria-labelledby="headingDokter"
+                        <div id="collapseDokter" class="collapse" aria-labelledby="headingDokter"
                             data-parent="#tindakanAccordion">
                             <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
                                 @if ($rawatDr->count())
