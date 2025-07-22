@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>@yield('title', 'AdminLTE Laravel')</title>
+    <title>@yield('title', 'Portal Vedika')</title>
 
 <link rel="icon" href="{{ asset('assets/img/backgrounds/logos.png') }}" type="image/png">
 
@@ -30,6 +30,7 @@
 <script src="{{ asset('adminlte/plugins/jquery/jquery.min.js') }}"></script>
 <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('adminlte/dist/js/adminlte.min.js') }}"></script>
+
 
 @yield('scripts')
 
