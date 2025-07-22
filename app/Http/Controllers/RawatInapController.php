@@ -111,49 +111,38 @@ class RawatInapController extends Controller
         return $query->count();
     }
 
+
+
     public function indexBpjs(Request $request)
     {
         $page = $request->get('page', 1);
 
-        $query = DB::table('mlite_vedika')
-            ->select(
-                'id',
-                'tanggal',
-                'no_rkm_medis',
-                'no_rawat',
-                'tgl_registrasi',
-                'nosep',
-                'jenis',
-                'status',
-                'username',
-                'catatan'
-            )
-            ->where('jenis', '1')
-            ->where('status', 'Pengajuan');
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $query->where(function ($q) use ($search) {
-                $q->where('no_rawat', 'like', "%{$search}%")
-                    ->orWhere('nosep', 'like', "%{$search}%")
-                    ->orWhere('no_rkm_medis', 'like', "%{$search}%");
-            });
-        } elseif ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
-            $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
-        } else {
-            $query->whereMonth('tanggal', now()->month)
-                ->whereYear('tanggal', now()->year);
+        if (!$request->filled('tgl_dari') && !$request->filled('tgl_sampai') && !$request->filled('search')) {
+            $request->merge([
+                'tgl_dari' => now()->toDateString(),
+                'tgl_sampai' => now()->toDateString(),
+            ]);
         }
 
-        $bpjs = $query->orderBy('tanggal', 'desc')
-            ->orderBy('id', 'desc')
-            ->paginate(25)
-            ->withQueryString();
+        $isFiltered = $request->filled('search') || ($request->filled('tgl_dari') && $request->filled('tgl_sampai'));
 
-        $totalKey = 'bpjs_ranap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])) . '_jenis_2');
-        $total = Cache::remember($totalKey, 60, function () use ($request) {
+        $cacheKey = 'bpjs_ranap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
+
+        $bpjs = Cache::remember($cacheKey, 300, function () use ($request, $isFiltered) {
             $query = DB::table('mlite_vedika')
-                ->where('jenis', '1')
+                ->select(
+                    'id',
+                    'tanggal',
+                    'no_rkm_medis',
+                    'no_rawat',
+                    'tgl_registrasi',
+                    'nosep',
+                    'jenis',
+                    'status',
+                    'username',
+                    'catatan'
+                )
+                ->where('jenis', 'Ranap')
                 ->where('status', 'Pengajuan');
 
             if ($request->filled('search')) {
@@ -163,9 +152,39 @@ class RawatInapController extends Controller
                         ->orWhere('nosep', 'like', "%{$search}%")
                         ->orWhere('no_rkm_medis', 'like', "%{$search}%");
                 });
-            } elseif ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            }
+
+            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
                 $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
-            } else {
+            } elseif (!$request->filled('search')) {
+                $query->whereDate('tanggal', now()->toDateString());
+            }
+
+            return $query->orderBy('tanggal', 'desc')
+                ->orderBy('id', 'desc')
+                ->paginate(25)
+                ->withQueryString();
+        });
+
+        $totalKey = 'bpjs_ranap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])));
+
+        $total = Cache::remember($totalKey, 300, function () use ($request) {
+            $query = DB::table('mlite_vedika')
+                ->where('jenis', 'Ranap')
+                ->where('status', 'Pengajuan');
+
+            if ($request->filled('search')) {
+                $search = $request->search;
+                $query->where(function ($q) use ($search) {
+                    $q->where('no_rawat', 'like', "%{$search}%")
+                        ->orWhere('nosep', 'like', "%{$search}%")
+                        ->orWhere('no_rkm_medis', 'like', "%{$search}%");
+                });
+            }
+
+            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+                $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
+            } elseif (!$request->filled('search')) {
                 $query->whereMonth('tanggal', now()->month)
                     ->whereYear('tanggal', now()->year);
             }
@@ -179,6 +198,7 @@ class RawatInapController extends Controller
         ]);
     }
 
+
     public function detail($no_rawat)
     {
         $data = $this->getRegistrationData($no_rawat);
@@ -190,46 +210,81 @@ class RawatInapController extends Controller
         $kategori = $this->getMasterBerkasDigital();
         $berkas = $this->getBerkasDigital($no_rawat);
         $pemeriksaan = $this->getPemeriksaanData($no_rawat);
+
         $suratKontrol = $this->getSuratKontrol($data->no_rkm_medis);
+        $suratKontrol = $suratKontrol->isEmpty() ? null : $suratKontrol;
 
         $rawatDr = $this->getRawatDokter($no_rawat);
         $rawatPr = $this->getRawatPerawat($no_rawat);
         $rawatDrPr = $this->getRawatDokterPerawat($no_rawat);
 
-        $operasi = $this->getOperasiData($no_rawat);
         $laporanOperasi = $this->getLaporanOperasi($no_rawat);
+        $laporanOperasi = $laporanOperasi->isEmpty() ? null : $laporanOperasi;
+
+        $operasi = $this->getOperasiData($no_rawat);
+        $operasi = $operasi->isEmpty() ? null : $operasi;
 
         $tindakan_radiologi = $this->getTindakanRadiologi($no_rawat);
+        $tindakan_radiologi = $tindakan_radiologi->isEmpty() ? null : $tindakan_radiologi;
+
         $hasil_radiologi = $this->getHasilRadiologi($no_rawat);
+        $hasil_radiologi = $hasil_radiologi->isEmpty() ? null : $hasil_radiologi;
 
         // Ambil data SEP terbaru untuk konsistensi
         $sepData = $this->getSepData($no_rawat);
         $no_sep = $sepData ? $sepData->no_sep : null;
-        
+
         $vedikaData = $this->getVedikaData($no_rawat);
-
         $billing = $this->getBillingData($no_rawat);
-
         $totalBilling = $billing->sum(function ($item) {
             return (float) $item->totalbiaya;
         });
-
         $readonly = Auth::check() && Auth::user()->roles === 'bpjs';
+        $dpjp_ranap = $this->getDpjp($no_rawat);
 
         $laboratorium = $this->getPemeriksaanLaboratorium($no_rawat);
+        $laboratorium = empty($laboratorium) ? null : $laboratorium;
+
         $pemberian_obat = $this->getPemberianObat($no_rawat);
-        $dpjp_ranap = $this->getDpjp($no_rawat);
+        $pemberian_obat = $pemberian_obat->isEmpty() ? null : $pemberian_obat;
+        
         $laboratorium_pa = $this->getLaboratoriumPA($no_rawat);
+        $laboratorium_pa = $laboratorium_pa->isEmpty() ? null : $laboratorium_pa;
+
         $resep_pulang = $this->getResepPulang($no_rawat);
+        $resep_pulang = $resep_pulang->isEmpty() ? null : $resep_pulang;
+
         $hasil_usg = $this->getHasilUSG($no_rawat);
+        $hasil_usg = $hasil_usg->isEmpty() ? null : $hasil_usg;
+
         $hasil_usg_gynecologi = $this->getHasilUSGGynecologi($no_rawat);
+        $hasil_usg_gynecologi = $hasil_usg_gynecologi->isEmpty() ? null : $hasil_usg_gynecologi;
+
         $hasil_echo = $this->getHasilEcho($no_rawat);
+        $hasil_echo = $hasil_echo->isEmpty() ? null : $hasil_echo;
+
         $hasil_ekg = $this->getHasilEKG($no_rawat);
+        $hasil_ekg = $hasil_ekg->isEmpty() ? null : $hasil_ekg;
 
         $rawat_inap_dr = $this->getRawatInapDokter($no_rawat);
-$rawat_inap_pr = $this->getRawatInapPerawat($no_rawat);
-$rawat_inap_drpr = $this->getRawatInapDokterPerawat($no_rawat);
+        $rawat_inap_pr = $this->getRawatInapPerawat($no_rawat);
+        $rawat_inap_drpr = $this->getRawatInapDokterPerawat($no_rawat);
 
+        $riwayatIgd = $this->riwayatPemeriksaanIgd($no_rawat);
+        $riwayatIgd = $riwayatIgd->isEmpty() ? null : $riwayatIgd;
+        $penilaianIgd = $this->getPenilaianIgd($no_rawat);
+        $penilaianIgd = $penilaianIgd->isEmpty() ? null : $penilaianIgd;
+        $catatanObservasiIgd = $this->catatanObservasiIgd($no_rawat);
+        $catatanObservasiIgd = $catatanObservasiIgd->isEmpty() ? null : $catatanObservasiIgd;
+
+        $catatanObservasiRanap = $this->catatanObservasiRanap($no_rawat);
+        $catatanObservasiRanap = $catatanObservasiRanap->isEmpty() ? null : $catatanObservasiRanap;
+
+        $catatanObservasiKebidanan = $this->catatanObservasiKebidanan($no_rawat);
+        $catatanObservasiKebidanan = $catatanObservasiKebidanan->isEmpty() ? null : $catatanObservasiKebidanan;
+        
+        $catatanObservasiPostpartum = $this->catatanObservasiPostpartum($no_rawat);
+        $catatanObservasiPostpartum = $catatanObservasiPostpartum->isEmpty() ? null : $catatanObservasiPostpartum;
 
         return view('rawatinap.detail', compact(
             'data',
@@ -262,56 +317,115 @@ $rawat_inap_drpr = $this->getRawatInapDokterPerawat($no_rawat);
             'rawat_inap_dr',
             'rawat_inap_pr',
             'rawat_inap_drpr',
-
+            'riwayatIgd',
+            'penilaianIgd',
+            'catatanObservasiIgd',
+            'catatanObservasiRanap',
+            'catatanObservasiKebidanan',
+            'catatanObservasiPostpartum'
         ));
+    }
+
+    private function catatanObservasiPostpartum($no_rawat)
+    {
+        return DB::table('catatan_observasi_ranap_postpartum')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tgl_perawatan')
+            ->orderBy('jam_rawat')
+            ->get();
+    }
+
+    private function catatanObservasiRanap($no_rawat)
+    {
+        return DB::table('catatan_observasi_ranap')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tgl_perawatan')
+            ->orderBy('jam_rawat')
+            ->get();
+    }
+
+    private function catatanObservasiKebidanan($no_rawat)
+    {
+        return DB::table('catatan_observasi_ranap_kebidanan')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tgl_perawatan')
+            ->orderBy('jam_rawat')
+            ->get();
+    }
+
+    private function catatanObservasiIgd($no_rawat)
+    {
+        return DB::table('catatan_observasi_igd')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tgl_perawatan')
+            ->orderBy('jam_rawat')
+            ->get();
+    }
+
+    private function getPenilaianIgd($no_rawat)
+    {
+        return DB::table('penilaian_medis_igd')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tanggal')
+            ->get();
+    }
+
+
+    private function riwayatPemeriksaanIgd($no_rawat)
+    {
+        return DB::table('pemeriksaan_ralan')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tgl_perawatan')
+            ->orderBy('jam_rawat')
+            ->get();
     }
 
 
     private function getRawatInapDokter($no_rawat)
-{
-    return DB::table('rawat_inap_dr')
-        ->join('jns_perawatan_inap', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
-        ->join('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter')
-        ->where('rawat_inap_dr.no_rawat', $no_rawat)
-        ->select('rawat_inap_dr.*', 'jns_perawatan_inap.nm_perawatan', 'dokter.nm_dokter')
-        ->orderBy('rawat_inap_dr.tgl_perawatan')
-        ->get();
-}
+    {
+        return DB::table('rawat_inap_dr')
+            ->join('jns_perawatan_inap', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
+            ->join('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('rawat_inap_dr.no_rawat', $no_rawat)
+            ->select('rawat_inap_dr.*', 'jns_perawatan_inap.nm_perawatan', 'dokter.nm_dokter')
+            ->orderBy('rawat_inap_dr.tgl_perawatan')
+            ->get();
+    }
 
-private function getRawatInapPerawat($no_rawat)
-{
-    return DB::table('rawat_inap_pr')
-        ->join('jns_perawatan_inap', 'rawat_inap_pr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
-        ->join('petugas', 'rawat_inap_pr.nip', '=', 'petugas.nip')
-        ->where('rawat_inap_pr.no_rawat', $no_rawat)
-        ->select('rawat_inap_pr.*', 'jns_perawatan_inap.nm_perawatan', 'petugas.nama')
-        ->orderBy('rawat_inap_pr.tgl_perawatan')
-        ->get();
-}
+    private function getRawatInapPerawat($no_rawat)
+    {
+        return DB::table('rawat_inap_pr')
+            ->join('jns_perawatan_inap', 'rawat_inap_pr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
+            ->join('petugas', 'rawat_inap_pr.nip', '=', 'petugas.nip')
+            ->where('rawat_inap_pr.no_rawat', $no_rawat)
+            ->select('rawat_inap_pr.*', 'jns_perawatan_inap.nm_perawatan', 'petugas.nama')
+            ->orderBy('rawat_inap_pr.tgl_perawatan')
+            ->get();
+    }
 
-private function getRawatInapDokterPerawat($no_rawat)
-{
-    return DB::table('rawat_inap_drpr')
-        ->join('jns_perawatan_inap', 'rawat_inap_drpr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
-        ->join('dokter', 'rawat_inap_drpr.kd_dokter', '=', 'dokter.kd_dokter')
-        ->join('petugas', 'rawat_inap_drpr.nip', '=', 'petugas.nip')
-        ->where('rawat_inap_drpr.no_rawat', $no_rawat)
-        ->select('rawat_inap_drpr.*', 'jns_perawatan_inap.nm_perawatan', 'dokter.nm_dokter', 'petugas.nama')
-        ->orderBy('rawat_inap_drpr.tgl_perawatan')
-        ->get();
-}
+    private function getRawatInapDokterPerawat($no_rawat)
+    {
+        return DB::table('rawat_inap_drpr')
+            ->join('jns_perawatan_inap', 'rawat_inap_drpr.kd_jenis_prw', '=', 'jns_perawatan_inap.kd_jenis_prw')
+            ->join('dokter', 'rawat_inap_drpr.kd_dokter', '=', 'dokter.kd_dokter')
+            ->join('petugas', 'rawat_inap_drpr.nip', '=', 'petugas.nip')
+            ->where('rawat_inap_drpr.no_rawat', $no_rawat)
+            ->select('rawat_inap_drpr.*', 'jns_perawatan_inap.nm_perawatan', 'dokter.nm_dokter', 'petugas.nama')
+            ->orderBy('rawat_inap_drpr.tgl_perawatan')
+            ->get();
+    }
 
 
     private function getHasilEKG($no_rawat)
-{
-    return DB::table('hasil_pemeriksaan_ekg')
-        ->where('no_rawat', $no_rawat)
-        ->orderBy('tanggal', 'asc')
-        ->get();
-}
+    {
+        return DB::table('hasil_pemeriksaan_ekg')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+    }
 
 
-        private function getHasilUSG($no_rawat)
+    private function getHasilUSG($no_rawat)
     {
         return DB::table('hasil_pemeriksaan_usg')
             ->where('no_rawat', $no_rawat)
@@ -385,6 +499,7 @@ private function getRawatInapDokterPerawat($no_rawat)
 
         return $dpjp_ranap;
     }
+
 
     private function getPemberianObat($no_rawat)
     {
@@ -477,6 +592,7 @@ private function getRawatInapDokterPerawat($no_rawat)
         return $pemeriksaan_laboratorium;
     }
 
+
     private function getBillingData($no_rawat)
     {
         return DB::table('billing')
@@ -492,6 +608,7 @@ private function getRawatInapDokterPerawat($no_rawat)
             ->where('no_rawat', $no_rawat)
             ->get();
     }
+
 
     private function getRegistrationData($no_rawat)
     {
@@ -537,7 +654,6 @@ private function getRawatInapDokterPerawat($no_rawat)
         });
     }
 
-    
 
     private function getPemeriksaanData($no_rawat)
     {
@@ -572,11 +688,11 @@ private function getRawatInapDokterPerawat($no_rawat)
     private function getRawatDokter($no_rawat)
     {
         return DB::table('rawat_inap_dr')
-    ->join('jns_perawatan', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
-    ->leftJoin('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter') 
-    ->where('rawat_inap_dr.no_rawat', $no_rawat)
-    ->select('rawat_inap_dr.*', 'jns_perawatan.nm_perawatan', 'dokter.nm_dokter')
-    ->get();
+            ->join('jns_perawatan', 'rawat_inap_dr.kd_jenis_prw', '=', 'jns_perawatan.kd_jenis_prw')
+            ->leftJoin('dokter', 'rawat_inap_dr.kd_dokter', '=', 'dokter.kd_dokter')
+            ->where('rawat_inap_dr.no_rawat', $no_rawat)
+            ->select('rawat_inap_dr.*', 'jns_perawatan.nm_perawatan', 'dokter.nm_dokter')
+            ->get();
     }
 
 
@@ -620,6 +736,7 @@ private function getRawatInapDokterPerawat($no_rawat)
             ->get();
     }
 
+
     private function getTindakanRadiologi($no_rawat)
     {
         return DB::table('periksa_radiologi')
@@ -631,12 +748,14 @@ private function getRawatInapDokterPerawat($no_rawat)
             ->get();
     }
 
+
     private function getHasilRadiologi($no_rawat)
     {
         return DB::table('hasil_radiologi')
             ->where('no_rawat', $no_rawat)
             ->get();
     }
+
 
     private function getNoSep($no_rawat)
     {
@@ -658,7 +777,7 @@ private function getRawatInapDokterPerawat($no_rawat)
     {
         return DB::table('bridging_sep')
             ->where('no_rawat', $no_rawat)
-            ->orderByDesc('no_sep') 
+            ->orderByDesc('no_sep')
             ->first();
     }
 
@@ -773,9 +892,9 @@ private function getRawatInapDokterPerawat($no_rawat)
             }
 
             $latestNosep = DB::table('bridging_sep')
-            ->where('no_rawat', $no_rawat)
-            ->orderByDesc('no_sep') 
-            ->value('no_sep') ?? $request->nosep;
+                ->where('no_rawat', $no_rawat)
+                ->orderByDesc('no_sep')
+                ->value('no_sep') ?? $request->nosep;
 
 
             DB::table('mlite_vedika_feedback')->insert([
@@ -806,6 +925,7 @@ private function getRawatInapDokterPerawat($no_rawat)
 
         return view('rawatinap.statusklaim', compact('berkas', 'no_rawat'));
     }
+
     public function lihatPemeriksaan($no_rawat)
     {
         $data = DB::table('pemeriksaan_ranap')
