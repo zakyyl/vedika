@@ -75,7 +75,7 @@
             @if (!empty($laboratorium))
                 @include('rawatjalan.partials.hasil_labor')
             @endif
-            @if (!empty($pemberianObat))
+            @if (!empty($pemberian_obat))
                 @include('rawatjalan.partials.pemberian_obat')
             @endif
             @if (!empty($billing))
