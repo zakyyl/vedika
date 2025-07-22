@@ -69,7 +69,6 @@
                                                         <tr><th>Rencana Tindak Lanjut</th><td>{{ $item->rtl ?? '-' }}</td></tr>
                                                         <tr><th>Evaluasi</th><td>{{ $item->evaluasi ?? '-' }}</td></tr>
                                                         <tr><th>Alergi</th><td>{{ $item->alergi ?? '-' }}</td></tr>
-                                                        <tr><th>NIP Petugas</th><td>{{ $item->nip ?? '-' }}</td></tr>
                                                     </tbody>
                                                 </table>
                                             </div>
