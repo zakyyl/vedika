@@ -52,16 +52,36 @@
                 </div>
             </div>
             @include('rawatjalan.partials.pemeriksaan', ['data' => $pemeriksaan])
-            @include('rawatjalan.partials.surat_kontrol')
-            @include('rawatjalan.partials.modal_update')
-            @include('rawatjalan.partials.tindakan')
-            @include('rawatjalan.partials.operasi')
-            @include('rawatjalan.partials.radiologi')
-            @include('rawatjalan.partials.hasil_usg')
-            @include('rawatjalan.partials.hasil_labor')
-            @include('rawatjalan.partials.pemberian_obat')
-            @include('rawatjalan.partials.billing')
             
+            @if (!empty($suratKontrol))
+                @include('rawatjalan.partials.surat_kontrol')
+            @endif
+
+            @include('rawatjalan.partials.modal_update')
+
+            @if (!empty($rawatDr) || !empty($rawatPr) || !empty($rawatDrPr))
+                @include('rawatjalan.partials.tindakan')
+            @endif
+
+            @if (!empty($operasi) || !empty($laporanOperasi)) 
+                @include('rawatjalan.partials.operasi')
+            @endif
+            @if (!empty($hasil_radiologi) || !empty($tindakan_radiologi))
+                @include('rawatjalan.partials.radiologi')
+            @endif
+            @if (!empty($hasilUsg) || !empty($hasil_usg_gynecologi) || !empty($hasil_echo) || !empty($hasil_ekg) || !empty($laporan_tindakan))
+                @include('rawatjalan.partials.hasil_usg')
+            @endif
+            @if (!empty($laboratorium))
+                @include('rawatjalan.partials.hasil_labor')
+            @endif
+            @if (!empty($pemberianObat))
+                @include('rawatjalan.partials.pemberian_obat')
+            @endif
+            @if (!empty($billing))
+                @include('rawatjalan.partials.billing')
+            @endif
+
             <div class="card">
                 <div class="card-footer">
                     <div class="row align-items-center">

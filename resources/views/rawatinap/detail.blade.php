@@ -50,18 +50,73 @@
                     @include('rawatinap.partials.upload_resume')
                 </div>
             </div>
+
             @include('rawatinap.partials.pemeriksaan', ['data' => $pemeriksaan])
-            @include('rawatinap.partials.surat_kontrol')
+
+            @if (!empty($riwayatIgd))
+                @include('rawatinap.partials.pemeriksaan_igd')
+            @endif
+
+            @if (!empty($penilaianIgd))
+                @include('rawatinap.partials.penilaian_igd')
+            @endif
+
+            @if (!empty($catatanObservasiIgd))
+                @include('rawatinap.partials.catatan_observasi_igd')
+            @endif
+            @if (!empty($catatanObservasiRanap))
+                @include('rawatinap.partials.catatan_observasi_ranap')
+            @endif
+
+            @if (!empty($catatanObservasiKebidanan))
+                @include('rawatinap.partials.catatan_observasi_kebidanan')
+            @endif
+            
+            @if (!empty($catatanObservasiPostpartum))
+                @include('rawatinap.partials.catatan_observasi_postpartum')
+            @endif
+            
+            @if (!empty($suratKontrol))
+                @include('rawatinap.partials.surat_kontrol')
+            @endif
+
             @include('rawatinap.partials.modal_update')
-            @include('rawatinap.partials.tindakan')
-            @include('rawatinap.partials.operasi')
-            @include('rawatinap.partials.radiologi')
-            @include('rawatinap.partials.hasil_usg')
-            @include('rawatinap.partials.hasil_labor')
-            @include('rawatinap.partials.labpa')
-            @include('rawatinap.partials.pemberian_obat')
-            @include('rawatinap.partials.resep_pulang')
-            @include('rawatinap.partials.billing')
+
+            @if (!empty($rawatDr) || !empty($rawatPr) || !empty($rawatDrPr))
+                @include('rawatinap.partials.tindakan')
+            @endif
+
+            @if (!empty($operasi))
+                @include('rawatinap.partials.operasi')
+            @endif
+
+            @if (!empty($tindakan_radiologi) || !empty($hasil_radiologi))
+                @include('rawatinap.partials.radiologi')
+            @endif
+
+            @if (!empty($hasil_usg) || !empty($hasil_usg_gynecologi) || !empty($hasil_echo) || !empty($hasil_ekg))
+                @include('rawatinap.partials.hasil_usg')
+            @endif
+
+            @if (!empty($laboratorium))
+                @include('rawatinap.partials.hasil_labor')
+            @endif
+
+            @if (!empty($laboratorium_pa))
+                @include('rawatinap.partials.labpa')
+            @endif
+
+            @if (!empty($pemberian_obat))
+                @include('rawatinap.partials.pemberian_obat')
+            @endif
+
+            @if (!empty($resep_pulang))
+                @include('rawatinap.partials.resep_pulang')
+            @endif
+
+            @if (!empty($billing))
+                @include('rawatinap.partials.billing')
+            @endif
 
             <div class="card">
                 <div class="card-footer">
