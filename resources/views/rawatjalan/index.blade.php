@@ -15,8 +15,11 @@
             </div>
         </div>
     </div>
+
     <section class="content">
         <div class="container-fluid">
+
+            {{-- Filter Card --}}
             <div class="card card-outline card-primary">
                 <div class="card-header">
                     <h3 class="card-title">Filter Data</h3>
@@ -26,8 +29,8 @@
                         <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label>No. Rawat</label>
-                                <input type="text" name="search" class="form-control"
-                                    placeholder="No. Rawat/SEP" value="{{ request('search') }}">
+                                <input type="text" name="search" class="form-control" placeholder="No. Rawat/SEP"
+                                    value="{{ request('search') }}">
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Tanggal Mulai</label>
@@ -49,6 +52,7 @@
                 </div>
             </div>
 
+            {{-- Data Table Card --}}
             <div class="card card-success card-outline">
                 <div class="card-header">
                     <h3 class="card-title">Daftar Rawat Jalan</h3>
@@ -71,8 +75,7 @@
                                 @forelse($rawatJalan as $data)
                                     <tr>
                                         <td>{{ $data->no_rawat }}</td>
-                                        {{-- <td>{{ $data->no_sep }}</td> --}}
-                                        <td>{{ !empty($data->no_sep) ? $data->no_sep : '-' }}</td>
+                                        <td>{{ $data->no_sep ?? '-' }}</td>
                                         <td>{{ $data->tgl_registrasi }}</td>
                                         <td>{{ \Illuminate\Support\Str::limit($data->nm_dokter, 25, '...') }}</td>
                                         <td>
@@ -81,15 +84,44 @@
                                         </td>
                                         <td>{{ $data->nm_poli }}</td>
                                         <td class="text-center">
-                                            <a href="{{ route('rawatjalan.detail', urlencode($data->no_rawat)) }}"
-                                                class="btn btn-sm btn-info" title="Detail">
-                                                <i class="fas fa-eye"></i>
-                                            </a>
+                                            @if (!empty($data->no_sep))
+                                                <a href="{{ route('rawatjalan.detail', urlencode($data->no_rawat)) }}"
+                                                    class="btn btn-sm btn-info" title="Detail">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                            @else
+                                                <button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
+                                                    data-target="#modalSepKosong">
+                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                </button>
+                                                <div class="modal fade" id="modalSepKosong" tabindex="-1" role="dialog"
+                                                    aria-labelledby="modalSepKosongLabel" aria-hidden="true">
+                                                    <div class="modal-dialog" role="document">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-warning text-white">
+                                                                <h5 class="modal-title" id="modalSepKosongLabel">Perhatian
+                                                                </h5>
+                                                                <button type="button" class="close" data-dismiss="modal"
+                                                                    aria-label="Tutup">
+                                                                    <span aria-hidden="true">&times;</span>
+                                                                </button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                Data tidak dapat dibuka karena SEP belum ada.
+                                                            </div>
+                                                            <div class="modal-footer">
+                                                                <button type="button" class="btn btn-secondary"
+                                                                    data-dismiss="modal">Tutup</button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="6" class="text-center text-muted py-4">
+                                        <td colspan="7" class="text-center text-muted py-4">
                                             <i class="fas fa-inbox fa-2x d-block mb-2"></i>
                                             Tidak ada data ditemukan.
                                         </td>
@@ -105,10 +137,7 @@
                         {{ $rawatJalan->appends(request()->query())->links('pagination::simple-bootstrap-4') }}
                     </div>
                 @endif
-
-
             </div>
-
         </div>
     </section>
 @endsection
