@@ -14,7 +14,8 @@
             data-parent="#accordionRadiologi">
             <div class="card-body p-2" style="font-size: 0.875rem;">
                 <h6 class="fw-bold mb-2">Tindakan Radiologi</h6>
-                @if ($tindakan_radiologi->count())
+                {{-- @if ($tindakan_radiologi->count()) --}}
+                @if (!empty($tindakan_radiologi) && $tindakan_radiologi->count())
                     <table class="table table-sm table-bordered mb-3">
                         <thead class="bg-light">
                             <tr>
@@ -39,7 +40,8 @@
                     <div class="alert alert-info m-0"><i class="fas fa-info-circle"></i> Tidak ada data tindakan radiologi.</div>
                 @endif
                 <h6 class="fw-bold mb-2">Hasil Radiologi</h6>
-                @if ($hasil_radiologi->count())
+                {{-- @if ($hasil_radiologi->count()) --}}
+                @if (!empty($hasil_radiologi) && $hasil_radiologi->count())
                     @foreach ($hasil_radiologi as $hasil)
                         <table class="table table-sm table-bordered mb-3">
                             <tbody>

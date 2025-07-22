@@ -26,7 +26,7 @@
                         <div id="collapseDokter" class="collapse" aria-labelledby="headingDokter"
                             data-parent="#tindakanAccordion">
                             <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
-                                @if ($rawatDr->count())
+                                @if (!empty($rawatDr) && count($rawatDr))
                                     <ul class="list-group">
                                         @foreach ($rawatDr as $item)
                                             <li class="list-group-item d-flex justify-content-between align-items-start">
@@ -57,7 +57,7 @@
                         <div id="collapsePetugas" class="collapse" aria-labelledby="headingPetugas"
                             data-parent="#tindakanAccordion">
                             <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
-                                @if ($rawatPr->count())
+                                @if (!empty($rawatPr) && count($rawatPr))
                                     <ul class="list-group">
                                         @foreach ($rawatPr as $item)
                                             <li class="list-group-item d-flex justify-content-between align-items-start">
@@ -88,7 +88,7 @@
                         <div id="collapseGabungan" class="collapse" aria-labelledby="headingGabungan"
                             data-parent="#tindakanAccordion">
                             <div class="card-body py-2 px-3" style="font-size: 0.875rem;">
-                                @if ($rawatDrPr->count())
+                                @if (!empty($rawatDrPr) && count($rawatDrPr))
                                     <ul class="list-group">
                                         @foreach ($rawatDrPr as $item)
                                             <li class="list-group-item d-flex justify-content-between align-items-start">
