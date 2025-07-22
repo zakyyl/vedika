@@ -47,18 +47,29 @@
                                                         <tr><th>Tensi</th><td>{{ $item->tensi ?? '-' }} mmHg</td></tr>
                                                         <tr><th>Nadi</th><td>{{ $item->nadi ?? '-' }} x/menit</td></tr>
                                                         <tr><th>Respirasi</th><td>{{ $item->respirasi ?? '-' }} x/menit</td></tr>
+                                                        <tr><th>SpO2</th><td>{{ $item->spo2 ?? '-' }} %</td></tr>
+                                                        <tr><th>GCS</th><td>{{ $item->gcs ?? '-' }}</td></tr>
+                                                        <tr><th>Kesadaran</th><td>{{ $item->kesadaran ?? '-' }}</td></tr>
                                                         <tr><th>Tinggi</th><td>{{ $item->tinggi ?? '-' }} cm</td></tr>
                                                         <tr><th>Berat</th><td>{{ $item->berat ?? '-' }} kg</td></tr>
+                                                        <tr><th>Lingkar Perut</th><td>{{ $item->lingkar_perut ?? '-' }} cm</td></tr>
                                                     </tbody>
                                                 </table>
                                             </div>
                                             <div class="col-md-6">
                                                 <table class="table table-sm table-bordered">
+                                                    <thead class="bg-light">
+                                                        <tr><th colspan="2" class="text-center">Keterangan</th></tr>
+                                                    </thead>
                                                     <tbody>
                                                         <tr><th>Keluhan</th><td>{{ $item->keluhan ?? '-' }}</td></tr>
                                                         <tr><th>Pemeriksaan</th><td>{{ $item->pemeriksaan ?? '-' }}</td></tr>
                                                         <tr><th>Penilaian</th><td>{{ $item->penilaian ?? '-' }}</td></tr>
-                                                        <tr><th>Instruksi</th><td>{{ $item->rtl ?? '-' }}</td></tr>
+                                                        <tr><th>Instruksi</th><td>{{ $item->instruksi ?? '-' }}</td></tr>
+                                                        <tr><th>Rencana Tindak Lanjut</th><td>{{ $item->rtl ?? '-' }}</td></tr>
+                                                        <tr><th>Evaluasi</th><td>{{ $item->evaluasi ?? '-' }}</td></tr>
+                                                        <tr><th>Alergi</th><td>{{ $item->alergi ?? '-' }}</td></tr>
+                                                        <tr><th>NIP Petugas</th><td>{{ $item->nip ?? '-' }}</td></tr>
                                                     </tbody>
                                                 </table>
                                             </div>
