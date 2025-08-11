@@ -7,9 +7,10 @@
 
 <link rel="icon" href="{{ asset('assets/img/backgrounds/logos.png') }}" type="image/png">
 
-
   <link rel="stylesheet" href="{{ asset('adminlte/plugins/fontawesome-free/css/all.min.css') }}">
   <link rel="stylesheet" href="{{ asset('adminlte/dist/css/adminlte.min.css') }}">
+  
+  @stack('styles')
 </head>
 <body class="hold-transition sidebar-mini layout-fixed">
 <div class="wrapper">
@@ -31,9 +32,8 @@
 <script src="{{ asset('adminlte/plugins/bootstrap/js/bootstrap.bundle.min.js') }}"></script>
 <script src="{{ asset('adminlte/dist/js/adminlte.min.js') }}"></script>
 
-
 @yield('scripts')
-
+@stack('scripts')
 
 <style>
     .rotate-icon {
@@ -70,6 +70,9 @@
 }
 .timeline-content {
     margin-left: 20px;
+}
+#dashboardChart {
+    min-height: 280px; /* tinggi chart */
 }
 
 

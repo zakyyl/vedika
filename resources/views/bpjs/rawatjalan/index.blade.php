@@ -1,6 +1,6 @@
 @extends('layouts.master')
 
-@section('title', 'Data Rawat Jalan BPJS')
+@section('title', 'Data Rawat jalan BPJS')
 
 @section('content')
     <div class="content-header">
@@ -15,7 +15,6 @@
             </div>
         </div>
     </div>
-
     <section class="content">
         <div class="container-fluid">
             <div class="card card-outline card-primary">
@@ -27,8 +26,8 @@
                         <div class="form-row">
                             <div class="form-group col-md-4">
                                 <label>No. Rawat</label>
-                                <input type="text" name="search" class="form-control"
-                                    placeholder="No. Rawat/SEP/RM" value="{{ request('search') }}">
+                                <input type="text" name="search" class="form-control" placeholder="No. Rawat/SEP/RM"
+                                    value="{{ request('search') }}">
                             </div>
                             <div class="form-group col-md-3">
                                 <label>Tanggal Mulai</label>
@@ -61,10 +60,10 @@
                                 <tr>
                                     <th>No Rawat</th>
                                     <th>No SEP</th>
-                                    <th>Tanggal</th>
-                                    <th>No RM</th>
+                                    <th>Tanggal Registrasi</th>
+                                    <th>Pasien</th>
                                     {{-- <th>Jenis</th> --}}
-                                    <th>Status</th>
+                                    {{-- <th>Status</th> --}}
                                     {{-- <th>Petugas</th> --}}
                                     <th class="text-center">Aksi</th>
                                 </tr>
@@ -72,12 +71,26 @@
                             <tbody>
                                 @forelse($bpjs as $data)
                                     <tr>
-                                        <td>{{ $data->no_rawat }}</td>
+                                        <td>
+                                            {{ $data->no_rawat }}
+                                            <div class="mt-1">
+                                                <span
+                                                    class="badge {{ $data->status ? 'badge-primary' : 'badge-warning' }} badge-pill"
+                                                    style="font-size: 0.70rem; padding: 0.25em 0.5em;">
+                                                    {{ $data->status ?? 'Belum Ada Pengajuan' }}
+                                                </span>
+                                            </div>
+                                        </td>
                                         <td>{{ $data->nosep ?? '-' }}</td>
-                                        <td>{{ $data->tanggal }}</td>
-                                        <td>{{ $data->no_rkm_medis }}</td>
+                                        <td>{{ $data->tgl_registrasi }}</td>
+                                        <td class="text-bold">
+                                            {{ $data->nm_pasien }}
+                                            <div class="text-muted small">RM:
+                                                {{ $data->no_rkm_medis ?? '-' }}
+                                            </div>
+                                        </td>
                                         {{-- <td>{{ $data->jenis }}</td> --}}
-                                        <td>{{ $data->status }}</td>
+                                        {{-- <td>{{ $data->status }}</td> --}}
                                         {{-- <td>{{ $data->username }}</td> --}}
                                         <td class="text-center">
                                             <a href="{{ route('rawatjalan.detail', urlencode($data->no_rawat)) }}"

@@ -14,43 +14,47 @@
                     </a>
                 </li>
 
-                <!-- CASEMIX Section -->
-                <li class="nav-header text-light" style="font-size: 0.75rem; padding: 6px 10px 3px; border-bottom: 1px solid rgba(255,255,255,0.07);">
-                    <i class="fas fa-layer-group mr-1"></i> CASEMIX
-                </li>
-                <li class="nav-item">
-                    <a href="/rawatjalan" class="nav-link {{ request()->is('rawatjalan') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-user-md"></i>
-                        <p>Rawat Jalan</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/rawatinap" class="nav-link {{ request()->is('rawatinap') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-procedures"></i>
-                        <p>Rawat Inap</p>
-                    </a>
-                </li>
+                {{-- CASEMIX Section --}}
+                @if(in_array(auth()->user()->roles, ['casemix', 'admin']))
+                    <li class="nav-header text-light" style="font-size: 0.75rem; padding: 6px 10px 3px; border-bottom: 1px solid rgba(255,255,255,0.07);">
+                        <i class="fas fa-layer-group mr-1"></i> CASEMIX
+                    </li>
+                    <li class="nav-item">
+                        <a href="/rawatjalan" class="nav-link {{ request()->is('rawatjalan') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-user-md"></i>
+                            <p>Rawat Jalan</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/rawatinap" class="nav-link {{ request()->is('rawatinap') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-procedures"></i>
+                            <p>Rawat Inap</p>
+                        </a>
+                    </li>
+                @endif
 
-                <!-- BPJS Section -->
-                <li class="nav-header text-light mt-1" style="font-size: 0.75rem; padding: 6px 10px 3px; border-bottom: 1px solid rgba(255,255,255,0.07);">
-                    <i class="fas fa-briefcase-medical mr-1"></i> BPJS
-                </li>
-                <li class="nav-item">
-                    <a href="/bpjs/rawatjalan" class="nav-link {{ request()->is('bpjs/rawatjalan') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-notes-medical"></i>
-                        <p>Rawat Jalan BPJS</p>
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a href="/bpjs/rawatinap" class="nav-link {{ request()->is('bpjs/rawatinap') ? 'active' : '' }}">
-                        <i class="nav-icon fas fa-bed"></i>
-                        <p>Rawat Inap BPJS</p>
-                    </a>
-                </li>
+                {{-- BPJS Section --}}
+                @if(in_array(auth()->user()->roles, ['bpjs', 'admin']))
+                    <li class="nav-header text-light mt-1" style="font-size: 0.75rem; padding: 6px 10px 3px; border-bottom: 1px solid rgba(255,255,255,0.07);">
+                        <i class="fas fa-briefcase-medical mr-1"></i> BPJS
+                    </li>
+                    <li class="nav-item">
+                        <a href="/bpjs/rawatjalan" class="nav-link {{ request()->is('bpjs/rawatjalan') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-notes-medical"></i>
+                            <p>Rawat Jalan BPJS</p>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/bpjs/rawatinap" class="nav-link {{ request()->is('bpjs/rawatinap') ? 'active' : '' }}">
+                            <i class="nav-icon fas fa-bed"></i>
+                            <p>Rawat Inap BPJS</p>
+                        </a>
+                    </li>
+                @endif
             </ul>
         </nav>
 
-        <!-- Logout di pojok bawah -->
+        {{-- Logout di pojok bawah --}}
         <div class="mt-auto">
             <ul class="nav nav-pills nav-sidebar flex-column">
                 <li class="nav-item">

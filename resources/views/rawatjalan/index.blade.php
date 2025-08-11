@@ -26,23 +26,42 @@
                 </div>
                 <div class="card-body">
                     <form method="GET" action="{{ route('rawatjalan.index') }}">
-                        <div class="form-row">
-                            <div class="form-group col-md-4">
+                        <div class="form-row align-items-end">
+                            <div class="form-group col-md-3 mb-2">
                                 <label>No. Rawat</label>
                                 <input type="text" name="search" class="form-control" placeholder="No. Rawat/SEP"
                                     value="{{ request('search') }}">
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-2 mb-2">
                                 <label>Tanggal Mulai</label>
                                 <input type="date" name="tgl_dari" class="form-control"
                                     value="{{ request('tgl_dari') }}">
                             </div>
-                            <div class="form-group col-md-3">
+                            <div class="form-group col-md-2 mb-2">
                                 <label>Tanggal Akhir</label>
                                 <input type="date" name="tgl_sampai" class="form-control"
                                     value="{{ request('tgl_sampai') }}">
                             </div>
-                            <div class="form-group col-md-2 d-flex align-items-end">
+                            <div class="form-group col-md-3 mb-2">
+                                <label>Status Vedika</label>
+                                <select name="status_vedika" class="form-control">
+                                    <option value="">-- Semua Status --</option>
+                                    <option value="Pengajuan"
+                                        {{ request('status_vedika') == 'Pengajuan' ? 'selected' : '' }}>
+                                        Pengajuan
+                                    </option>
+                                    <option value="Rujukan Internal"
+                                        {{ request('status_vedika') == 'Rujukan Internal' ? 'selected' : '' }}>
+                                        Rujukan Internal
+                                    </option>
+                                    <option value="Belum Ada Pengajuan"
+                                        {{ request('status_vedika') == 'Belum Ada Pengajuan' ? 'selected' : '' }}>
+                                        Belum Ada Pengajuan
+                                    </option>
+
+                                </select>
+                            </div>
+                            <div class="form-group col-md-2 mb-2">
                                 <button type="submit" class="btn btn-primary btn-block">
                                     <i class="fas fa-search mr-1"></i> Filter
                                 </button>
@@ -74,7 +93,25 @@
                             <tbody>
                                 @forelse($rawatJalan as $data)
                                     <tr>
-                                        <td>{{ $data->no_rawat }}</td>
+                                        {{-- <td>{{ $data->no_rawat }}</td> --}}
+                                        <td>
+                                            {{ $data->no_rawat }}
+                                            <div class="mt-1">
+                                                @php
+                                                    $badgeClass = match ($data->status_vedika) {
+                                                        'Pengajuan' => 'badge-primary',
+                                                        'Rujukan Internal' => 'badge-success',
+                                                        default => 'badge-warning',
+                                                    };
+                                                    $statusText = $data->status_vedika ?? 'Belum Ada Pengajuan';
+                                                @endphp
+                                                <span class="badge {{ $badgeClass }} badge-pill"
+                                                    style="font-size: 0.70rem; padding: 0.25em 0.5em;">
+                                                    {{ $statusText }}
+                                                </span>
+
+                                            </div>
+                                        </td>
                                         <td>{{ $data->no_sep ?? '-' }}</td>
                                         <td>{{ $data->tgl_registrasi }}</td>
                                         <td>{{ \Illuminate\Support\Str::limit($data->nm_dokter, 25, '...') }}</td>
@@ -90,33 +127,12 @@
                                                     <i class="fas fa-eye"></i>
                                                 </a>
                                             @else
-                                                <button type="button" class="btn btn-warning btn-sm" data-toggle="modal"
-                                                    data-target="#modalSepKosong">
-                                                    <i class="fas fa-exclamation-triangle"></i>
+                                                <button type="button" class="btn btn-sm btn-info" title="Detail"
+                                                    data-toggle="modal" data-target="#modalSepKosong">
+                                                    <i class="fas fa-eye"></i>
                                                 </button>
-                                                <div class="modal fade" id="modalSepKosong" tabindex="-1" role="dialog"
-                                                    aria-labelledby="modalSepKosongLabel" aria-hidden="true">
-                                                    <div class="modal-dialog" role="document">
-                                                        <div class="modal-content">
-                                                            <div class="modal-header bg-warning text-white">
-                                                                <h5 class="modal-title" id="modalSepKosongLabel">Perhatian
-                                                                </h5>
-                                                                <button type="button" class="close" data-dismiss="modal"
-                                                                    aria-label="Tutup">
-                                                                    <span aria-hidden="true">&times;</span>
-                                                                </button>
-                                                            </div>
-                                                            <div class="modal-body">
-                                                                Data tidak dapat dibuka karena SEP belum ada.
-                                                            </div>
-                                                            <div class="modal-footer">
-                                                                <button type="button" class="btn btn-secondary"
-                                                                    data-dismiss="modal">Tutup</button>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
                                             @endif
+
                                         </td>
                                     </tr>
                                 @empty
@@ -138,6 +154,28 @@
                     </div>
                 @endif
             </div>
+
         </div>
     </section>
+
+    {{-- Modal SEP Kosong --}}
+    <div class="modal fade" id="modalSepKosong" tabindex="-1" role="dialog" aria-labelledby="modalSepKosongLabel"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header bg-warning text-white">
+                    <h5 class="modal-title" id="modalSepKosongLabel">Perhatian</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Tutup">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    Data tidak dapat dibuka karena SEP belum ada.
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
 @endsection

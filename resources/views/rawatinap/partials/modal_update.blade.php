@@ -38,10 +38,11 @@
                             $userRole = Auth::user()->roles ?? 'guest';
 
                             $allowedStatus = match ($userRole) {
-                                'bpjs' => ['Perbaiki', 'Disetujui'],
-                                'casemix' => ['Pengajuan'],
-                                default => ['Pengajuan', 'Perbaiki', 'Disetujui'],
-                            };
+    'bpjs' => ['Perbaiki', 'Disetujui'],
+    'casemix' => ['Pengajuan', 'Rujukan Internal'],
+    default => ['Pengajuan', 'Perbaiki', 'Disetujui', 'Rujukan Internal'],
+};
+
                         @endphp
 
                         <select name="status" id="status" class="form-control" required>

@@ -39,9 +39,10 @@
 
                             $allowedStatus = match ($userRole) {
                                 'bpjs' => ['Perbaiki', 'Disetujui'],
-                                'casemix' => ['Pengajuan'],
-                                default => ['Pengajuan', 'Perbaiki', 'Disetujui'],
+                                'casemix' => ['Pengajuan', 'Rujukan Internal'],
+                                default => ['Pengajuan', 'Perbaiki', 'Disetujui', 'Rujukan Internal'],
                             };
+
                         @endphp
 
                         <select name="status" id="status" class="form-control" required>
@@ -90,7 +91,7 @@
                 <input type="hidden" name="no_rkm_medis" value="{{ $data->no_rkm_medis }}">
                 <input type="hidden" name="tgl_registrasi" value="{{ $data->tgl_registrasi }}">
                 <input type="hidden" name="nosep" value="{{ $sepData->no_sep }}">
-                <input type="hidden" name="jenis" value="Ralan">
+                <input type="hidden" name="jenis" value="Ranap">
 
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Batal</button>

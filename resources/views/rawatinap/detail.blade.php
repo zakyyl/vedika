@@ -86,7 +86,7 @@
                 @include('rawatinap.partials.tindakan')
             @endif
 
-            @if (!empty($operasi))
+            @if (!empty($laporanOperasi) && $laporanOperasi->count())
                 @include('rawatinap.partials.operasi')
             @endif
 

@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Auth;
 class RawatInapController extends Controller
 {
 
+    //CASEMIX
     public function index(Request $request)
     {
         $page = $request->get('page', 1);
@@ -27,12 +28,12 @@ class RawatInapController extends Controller
 
         $queryKey = 'rawatinap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
 
+
         $rawatInap = $isFiltered
             ? $this->getRawatInapData($request)
             : Cache::remember($queryKey, 60, fn() => $this->getRawatInapData($request));
 
-        $totalKey = 'rawatinap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])));
-
+        $totalKey = 'rawatinap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai', 'status_vedika'])));
         $total = $isFiltered
             ? $this->getRawatInapTotal($request)
             : Cache::remember($totalKey, 60, fn() => $this->getRawatInapTotal($request));
@@ -50,6 +51,7 @@ class RawatInapController extends Controller
             ->join('pasien', 'reg_periksa.no_rkm_medis', '=', 'pasien.no_rkm_medis')
             ->join('poliklinik', 'reg_periksa.kd_poli', '=', 'poliklinik.kd_poli')
             ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
+            ->leftJoin('mlite_vedika', 'reg_periksa.no_rawat', '=', 'mlite_vedika.no_rawat')
             ->select(
                 'reg_periksa.no_rawat',
                 'reg_periksa.tgl_registrasi',
@@ -57,8 +59,10 @@ class RawatInapController extends Controller
                 'reg_periksa.no_rkm_medis',
                 'pasien.nm_pasien',
                 'poliklinik.nm_poli',
-                'bridging_sep.no_sep'
+                'bridging_sep.no_sep',
+                'mlite_vedika.status as status_vedika'
             )
+
             ->where('reg_periksa.kd_pj', 'BP1')
             ->where('reg_periksa.status_lanjut', 'ranap')
             ->where('reg_periksa.status_bayar', 'Sudah Bayar');
@@ -79,16 +83,32 @@ class RawatInapController extends Controller
                 ->whereYear('reg_periksa.tgl_registrasi', now()->year);
         }
 
+        // Filter Status Vedika
+        if ($request->filled('status_vedika')) {
+            if ($request->status_vedika === 'Belum Ada Pengajuan') {
+                $query->whereNull('mlite_vedika.status');
+            } elseif ($request->status_vedika === 'Pengajuan') {
+                $query->where('mlite_vedika.status', '=', 'Pengajuan');
+            } elseif ($request->status_vedika === 'Rujukan Internal') {
+                $query->where('mlite_vedika.status', '=', 'Rujukan Internal');
+            }
+        }
+
+
+
+
         return $query->orderBy('reg_periksa.tgl_registrasi', 'desc')
             ->orderBy('reg_periksa.jam_reg', 'desc')
             ->paginate(25)
             ->withQueryString();
     }
 
+
     private function getRawatInapTotal(Request $request)
     {
         $query = DB::table('reg_periksa')
             ->leftJoin('bridging_sep', 'reg_periksa.no_rawat', '=', 'bridging_sep.no_rawat')
+            ->leftJoin('mlite_vedika', 'reg_periksa.no_rawat', '=', 'mlite_vedika.no_rawat')
             ->where('reg_periksa.kd_pj', 'BP1')
             ->where('reg_periksa.status_lanjut', 'ranap')
             ->where('reg_periksa.status_bayar', 'Sudah Bayar');
@@ -108,10 +128,22 @@ class RawatInapController extends Controller
                 ->whereYear('reg_periksa.tgl_registrasi', now()->year);
         }
 
+        if ($request->filled('status_vedika')) {
+            if ($request->status_vedika === 'Belum Ada Pengajuan') {
+                $query->whereNull('mlite_vedika.status');
+            } elseif ($request->status_vedika === 'Pengajuan') {
+                $query->where('mlite_vedika.status', '=', 'Pengajuan');
+            } elseif ($request->status_vedika === 'Rujukan Internal') {
+                $query->where('mlite_vedika.status', '=', 'Rujukan Internal');
+            }
+        }
+
+
+
         return $query->count();
     }
 
-
+    //BPJS
 
     public function indexBpjs(Request $request)
     {
@@ -128,68 +160,23 @@ class RawatInapController extends Controller
 
         $cacheKey = 'bpjs_ranap_index_' . md5(serialize($request->except('page'))) . '_page_' . $page;
 
-        $bpjs = Cache::remember($cacheKey, 300, function () use ($request, $isFiltered) {
-            $query = DB::table('mlite_vedika')
-                ->select(
-                    'id',
-                    'tanggal',
-                    'no_rkm_medis',
-                    'no_rawat',
-                    'tgl_registrasi',
-                    'nosep',
-                    'jenis',
-                    'status',
-                    'username',
-                    'catatan'
-                )
-                ->where('jenis', 'Ranap')
-                ->where('status', 'Pengajuan');
-
-            if ($request->filled('search')) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('no_rawat', 'like', "%{$search}%")
-                        ->orWhere('nosep', 'like', "%{$search}%")
-                        ->orWhere('no_rkm_medis', 'like', "%{$search}%");
-                });
-            }
-
-            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
-                $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
-            } elseif (!$request->filled('search')) {
-                $query->whereDate('tanggal', now()->toDateString());
-            }
-
-            return $query->orderBy('tanggal', 'desc')
-                ->orderBy('id', 'desc')
-                ->paginate(25)
-                ->withQueryString();
-        });
+        $bpjs = $isFiltered
+            ? $this->getBpjsRawatInapData($request)
+            : Cache::remember($cacheKey, 300, fn() => $this->getBpjsRawatInapData($request));
 
         $totalKey = 'bpjs_ranap_total_' . md5(serialize($request->only(['search', 'tgl_dari', 'tgl_sampai'])));
 
-        $total = Cache::remember($totalKey, 300, function () use ($request) {
-            $query = DB::table('mlite_vedika')
-                ->where('jenis', 'Ranap')
-                ->where('status', 'Pengajuan');
+        $total = $isFiltered
+            ? $this->getBpjsRawatInapTotal($request)
+            : Cache::remember($totalKey, 300, fn() => $this->getBpjsRawatInapTotal($request));
 
-            if ($request->filled('search')) {
-                $search = $request->search;
-                $query->where(function ($q) use ($search) {
-                    $q->where('no_rawat', 'like', "%{$search}%")
-                        ->orWhere('nosep', 'like', "%{$search}%")
-                        ->orWhere('no_rkm_medis', 'like', "%{$search}%");
-                });
-            }
+        $pasienMap = DB::table('pasien')
+            ->whereIn('no_rkm_medis', $bpjs->pluck('no_rkm_medis')->unique())
+            ->pluck('nm_pasien', 'no_rkm_medis');
 
-            if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
-                $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
-            } elseif (!$request->filled('search')) {
-                $query->whereMonth('tanggal', now()->month)
-                    ->whereYear('tanggal', now()->year);
-            }
-
-            return $query->count();
+        $bpjs->getCollection()->transform(function ($item) use ($pasienMap) {
+            $item->nm_pasien = $pasienMap[$item->no_rkm_medis] ?? '-';
+            return $item;
         });
 
         return view('bpjs.rawatinap.index', [
@@ -198,6 +185,143 @@ class RawatInapController extends Controller
         ]);
     }
 
+    private function getBpjsRawatInapData(Request $request)
+    {
+        $latestKamarInap = DB::table('kamar_inap')
+            ->select('no_rawat', DB::raw('MAX(tgl_keluar) as tgl_keluar'))
+            ->groupBy('no_rawat');
+
+        $query = DB::table('mlite_vedika as v')
+            ->joinSub($latestKamarInap, 'ki', function ($join) {
+                $join->on('v.no_rawat', '=', 'ki.no_rawat');
+            })
+            ->select(
+                'v.id',
+                'ki.tgl_keluar',
+                'v.no_rkm_medis',
+                'v.no_rawat',
+                'v.tgl_registrasi',
+                'v.tanggal',
+                'v.nosep',
+                'v.jenis',
+                'v.status',
+                'v.username',
+                'v.catatan'
+            )
+            ->where('v.jenis', 'Ranap')
+            ->where('v.status', 'Pengajuan');
+
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('v.no_rawat', 'like', "%{$search}%")
+                    ->orWhere('v.nosep', 'like', "%{$search}%")
+                    ->orWhere('v.no_rkm_medis', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            $query->whereBetween('ki.tgl_keluar', [$request->tgl_dari, $request->tgl_sampai]);
+        } elseif (!$request->filled('search')) {
+            $query->whereDate('ki.tgl_keluar', now()->toDateString());
+        }
+
+        return $query->orderBy('ki.tgl_keluar', 'desc')
+            ->orderBy('v.id', 'desc')
+            ->paginate(25)
+            ->withQueryString();
+    }
+
+    private function getBpjsRawatInapTotal(Request $request)
+    {
+        $query = DB::table('mlite_vedika as v')
+            ->join('kamar_inap as ki', 'v.no_rawat', '=', 'ki.no_rawat')
+            ->where('v.jenis', 'Ranap')
+            ->where('v.status', 'Pengajuan');
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('v.no_rawat', 'like', "%{$search}%")
+                    ->orWhere('v.nosep', 'like', "%{$search}%")
+                    ->orWhere('v.no_rkm_medis', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+            $query->whereBetween('ki.tgl_keluar', [$request->tgl_dari, $request->tgl_sampai]);
+        } elseif (!$request->filled('search')) {
+            $query->whereMonth('ki.tgl_keluar', now()->month)
+                ->whereYear('ki.tgl_keluar', now()->year);
+        }
+
+        return $query->count();
+    }
+
+    // private function getBpjsRawatInapData(Request $request)
+    // {
+    //     $query = DB::table('mlite_vedika')
+    //         ->select(
+    //             'id',
+    //             'tanggal',
+    //             'no_rkm_medis',
+    //             'no_rawat',
+    //             'tgl_registrasi',
+    //             'nosep',
+    //             'jenis',
+    //             'status',
+    //             'username',
+    //             'catatan'
+    //         )
+    //         ->where('jenis', 'Ranap')
+    //         ->where('status', 'Pengajuan');
+
+    //     if ($request->filled('search')) {
+    //         $search = $request->search;
+    //         $query->where(function ($q) use ($search) {
+    //             $q->where('no_rawat', 'like', "%{$search}%")
+    //                 ->orWhere('nosep', 'like', "%{$search}%")
+    //                 ->orWhere('no_rkm_medis', 'like', "%{$search}%");
+    //         });
+    //     }
+
+    //     if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+    //         $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
+    //     } elseif (!$request->filled('search')) {
+    //         $query->whereDate('tanggal', now()->toDateString());
+    //     }
+
+    //     return $query->orderBy('tanggal', 'desc')
+    //         ->orderBy('id', 'desc')
+    //         ->paginate(25)
+    //         ->withQueryString();
+    // }
+
+    // private function getBpjsRawatInapTotal(Request $request)
+    // {
+    //     $query = DB::table('mlite_vedika')
+    //         ->where('jenis', 'Ranap')
+    //         ->where('status', 'Pengajuan');
+
+    //     if ($request->filled('search')) {
+    //         $search = $request->search;
+    //         $query->where(function ($q) use ($search) {
+    //             $q->where('no_rawat', 'like', "%{$search}%")
+    //                 ->orWhere('nosep', 'like', "%{$search}%")
+    //                 ->orWhere('no_rkm_medis', 'like', "%{$search}%");
+    //         });
+    //     }
+
+    //     if ($request->filled('tgl_dari') && $request->filled('tgl_sampai')) {
+    //         $query->whereBetween('tanggal', [$request->tgl_dari, $request->tgl_sampai]);
+    //     } elseif (!$request->filled('search')) {
+    //         $query->whereMonth('tanggal', now()->month)
+    //             ->whereYear('tanggal', now()->year);
+    //     }
+
+    //     return $query->count();
+    // }
 
     public function detail($no_rawat)
     {
@@ -247,7 +371,7 @@ class RawatInapController extends Controller
 
         $pemberian_obat = $this->getPemberianObat($no_rawat);
         $pemberian_obat = $pemberian_obat->isEmpty() ? null : $pemberian_obat;
-        
+
         $laboratorium_pa = $this->getLaboratoriumPA($no_rawat);
         $laboratorium_pa = $laboratorium_pa->isEmpty() ? null : $laboratorium_pa;
 
@@ -282,7 +406,7 @@ class RawatInapController extends Controller
 
         $catatanObservasiKebidanan = $this->catatanObservasiKebidanan($no_rawat);
         $catatanObservasiKebidanan = $catatanObservasiKebidanan->isEmpty() ? null : $catatanObservasiKebidanan;
-        
+
         $catatanObservasiPostpartum = $this->catatanObservasiPostpartum($no_rawat);
         $catatanObservasiPostpartum = $catatanObservasiPostpartum->isEmpty() ? null : $catatanObservasiPostpartum;
 
@@ -695,7 +819,6 @@ class RawatInapController extends Controller
             ->get();
     }
 
-
     private function getRawatPerawat($no_rawat)
     {
         return DB::table('rawat_jl_pr')
@@ -705,7 +828,6 @@ class RawatInapController extends Controller
             ->select('rawat_jl_pr.*', 'jns_perawatan.nm_perawatan', 'petugas.nama as nama_petugas')
             ->get();
     }
-
 
     private function getRawatDokterPerawat($no_rawat)
     {
@@ -718,7 +840,6 @@ class RawatInapController extends Controller
             ->get();
     }
 
-
     private function getOperasiData($no_rawat)
     {
         return DB::table('operasi')
@@ -728,14 +849,12 @@ class RawatInapController extends Controller
             ->get();
     }
 
-
     private function getLaporanOperasi($no_rawat)
     {
         return DB::table('laporan_operasi')
             ->where('no_rawat', $no_rawat)
             ->get();
     }
-
 
     private function getTindakanRadiologi($no_rawat)
     {
@@ -748,14 +867,12 @@ class RawatInapController extends Controller
             ->get();
     }
 
-
     private function getHasilRadiologi($no_rawat)
     {
         return DB::table('hasil_radiologi')
             ->where('no_rawat', $no_rawat)
             ->get();
     }
-
 
     private function getNoSep($no_rawat)
     {
@@ -764,14 +881,12 @@ class RawatInapController extends Controller
             ->value('no_sep');
     }
 
-
     private function getVedikaData($no_rawat)
     {
         return Cache::remember("vedika_data_$no_rawat", 300, function () use ($no_rawat) {
             return DB::table('mlite_vedika')->where('no_rawat', $no_rawat)->first();
         });
     }
-
 
     private function getSepData($no_rawat)
     {
@@ -780,7 +895,6 @@ class RawatInapController extends Controller
             ->orderByDesc('no_sep')
             ->first();
     }
-
 
     public function uploadResume(Request $request, $no_rawat)
     {
@@ -854,11 +968,11 @@ class RawatInapController extends Controller
         }
     }
 
-
     public function updateStatus(Request $request, $no_rawat)
     {
         $request->validate([
-            'status' => 'required|in:Pengajuan,Perbaiki,Disetujui',
+            // 'status' => 'required|in:Pengajuan,Perbaiki,Disetujui',
+            'status' => 'required|in:Pengajuan,Perbaiki,Disetujui,Rujukan Internal',
             'catatan' => 'nullable|string',
             'no_rkm_medis' => 'required|string',
             'tgl_registrasi' => 'required|date',
