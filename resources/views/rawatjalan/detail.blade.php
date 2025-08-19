@@ -52,7 +52,7 @@
                 </div>
             </div>
             @include('rawatjalan.partials.pemeriksaan', ['data' => $pemeriksaan])
-            
+
             @if (!empty($suratKontrol))
                 @include('rawatjalan.partials.surat_kontrol')
             @endif
@@ -63,13 +63,23 @@
                 @include('rawatjalan.partials.tindakan')
             @endif
 
-            @if (!empty($operasi) || !empty($laporanOperasi)) 
+            @if (!empty($uji_fungsi_kfr) || !empty($layanan_kfr) || !empty($layanan_program_kfr))
+                @include('rawatjalan.partials.kfr')
+            @endif
+
+
+            @if (!empty($operasi) || !empty($laporanOperasi))
                 @include('rawatjalan.partials.operasi')
             @endif
             @if (!empty($hasil_radiologi) || !empty($tindakan_radiologi))
                 @include('rawatjalan.partials.radiologi')
             @endif
-            @if (!empty($hasilUsg) || !empty($hasil_usg_gynecologi) || !empty($hasil_echo) || !empty($hasil_ekg) || !empty($laporan_tindakan))
+            @if (
+                !empty($hasilUsg) ||
+                    !empty($hasil_usg_gynecologi) ||
+                    !empty($hasil_echo) ||
+                    !empty($hasil_ekg) ||
+                    !empty($laporan_tindakan))
                 @include('rawatjalan.partials.hasil_usg')
             @endif
             @if (!empty($laboratorium))

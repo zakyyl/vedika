@@ -321,6 +321,15 @@ class RawatJalanController extends Controller
         $laporan_tindakan = $this->getLaporanTindakan($no_rawat);
         $laporan_tindakan = $laporan_tindakan->isEmpty() ? null : $laporan_tindakan;
 
+        $uji_fungsi_kfr = $this->getUjiFungsiKFR($no_rawat);
+        $uji_fungsi_kfr = $uji_fungsi_kfr->isEmpty() ? null : $uji_fungsi_kfr;
+
+        $layanan_kfr = $this->getLayananKedokteranFisikRehabilitasi($no_rawat);
+        $layanan_kfr = $layanan_kfr->isEmpty() ? null : $layanan_kfr;
+
+        $layanan_program_kfr = $this->getLayananProgramKFR($no_rawat);
+        // $layanan_program_kfr = $layanan_program_kfr->isEmpty() ? null : $layanan_program_kfr;
+        
 
         return view('rawatjalan.detail', compact(
             'data',
@@ -347,9 +356,190 @@ class RawatJalanController extends Controller
             'hasil_usg_gynecologi',
             'hasil_echo',
             'hasil_ekg',
-            'laporan_tindakan'
+            'laporan_tindakan',
+            'uji_fungsi_kfr',
+            'layanan_kfr',
+            'layanan_program_kfr'
         ));
     }
+
+    // private function getLayananProgramKFR($no_rawat_layanan)
+    // {
+    //     $baseUrl = 'http://192.168.1.33/ERMV1/layananprogramkfr/';
+
+    //     $results = DB::table('layanan_program_kfr as lpk')
+    //         ->join('reg_periksa as rp', 'lpk.no_rawat', '=', 'rp.no_rawat')
+    //         ->join('pasien as p', 'rp.no_rkm_medis', '=', 'p.no_rkm_medis')
+    //         ->join('petugas as pt', 'lpk.nip', '=', 'pt.nip')
+    //         ->join('bukti_layanan_program_kfr as bpk', 'bpk.no_rawat', '=', 'lpk.no_rawat')
+    //         ->join('layanan_kedokteran_fisik_rehabilitasi as lkfr', 'lkfr.no_rawat', '=', 'lpk.no_rawat_layanan')
+    //         ->where('lpk.no_rawat_layanan', $no_rawat_layanan)
+    //         ->orderBy('lpk.tanggal', 'asc')
+    //         ->select([
+    //             'rp.no_rawat',
+    //             'p.no_rkm_medis',
+    //             'p.nm_pasien',
+    //             'rp.umurdaftar',
+    //             'rp.sttsumur',
+    //             'p.jk',
+    //             'p.tgl_lahir',
+    //             'lpk.tanggal',
+    //             'lpk.no_rawat_layanan',
+    //             'lkfr.diagnosa_medis',
+    //             'lkfr.tatalaksana',
+    //             'lpk.program',
+    //             'lpk.nip',
+    //             'pt.nama',
+    //             'bpk.photo',
+    //             'lkfr.evaluasi'
+    //         ])
+    //         ->get();
+
+    //     // Group data per kombinasi unik layanan
+    //     $grouped = collect();
+    //     foreach ($results as $row) {
+    //         $key = $row->no_rawat_layanan . '|' . $row->tanggal . '|' . $row->program; // kunci unik
+    //         if (!$grouped->has($key)) {
+    //             $row->photos = [];
+    //             $grouped->put($key, $row);
+    //         }
+    //         $grouped[$key]->photos[] = $baseUrl . ltrim($row->photo, '/');
+    //     }
+
+    //     return $grouped->values();
+    // }
+
+//     private function getLayananProgramKFR($id)
+// {
+//     $baseUrl = 'http://192.168.1.33/ERMV1/layananprogramkfr/';
+
+//     $results = DB::table('layanan_program_kfr as lpk')
+//         ->join('reg_periksa as rp', 'lpk.no_rawat', '=', 'rp.no_rawat')
+//         ->join('pasien as p', 'rp.no_rkm_medis', '=', 'p.no_rkm_medis')
+//         ->join('petugas as pt', 'lpk.nip', '=', 'pt.nip')
+//         ->join('bukti_layanan_program_kfr as bpk', 'bpk.no_rawat', '=', 'lpk.no_rawat')
+//         ->join('layanan_kedokteran_fisik_rehabilitasi as lkfr', 'lkfr.no_rawat', '=', 'lpk.no_rawat_layanan')
+//         ->where(function ($q) use ($id) {
+//             $q->where('lpk.no_rawat_layanan', $id)
+//               ->orWhere('lpk.no_rawat', $id);
+//         })
+//         ->orderBy('lpk.tanggal', 'asc')
+//         ->select([
+//             'rp.no_rawat',
+//             'p.no_rkm_medis',
+//             'p.nm_pasien',
+//             'rp.umurdaftar',
+//             'rp.sttsumur',
+//             'p.jk',
+//             'p.tgl_lahir',
+//             'lpk.tanggal',
+//             'lpk.no_rawat_layanan',
+//             'lkfr.diagnosa_medis',
+//             'lkfr.tatalaksana',
+//             'lpk.program',
+//             'lpk.nip',
+//             'pt.nama',
+//             'bpk.photo',
+//             'lkfr.evaluasi'
+//         ])
+//         ->get();
+
+//     // Group data per kombinasi unik layanan
+//     $grouped = collect();
+//     foreach ($results as $row) {
+//         $key = $row->no_rawat_layanan . '|' . $row->tanggal . '|' . $row->program;
+//         if (!$grouped->has($key)) {
+//             $row->photos = [];
+//             $grouped->put($key, $row);
+//         }
+//         $grouped[$key]->photos[] = $baseUrl . ltrim($row->photo, '/');
+//     }
+
+//     return $grouped->values();
+// }
+
+private function getLayananProgramKFR($id)
+{
+    $baseUrl = 'http://192.168.1.33/ERMV1/layananprogramkfr/';
+
+    $results = DB::table('layanan_program_kfr as lpk')
+        ->join('reg_periksa as rp', 'lpk.no_rawat', '=', 'rp.no_rawat')
+        ->join('pasien as p', 'rp.no_rkm_medis', '=', 'p.no_rkm_medis')
+        ->join('petugas as pt', 'lpk.nip', '=', 'pt.nip')
+        ->join('bukti_layanan_program_kfr as bpk', 'bpk.no_rawat', '=', 'lpk.no_rawat')
+        ->join('layanan_kedokteran_fisik_rehabilitasi as lkfr', 'lkfr.no_rawat', '=', 'lpk.no_rawat_layanan')
+        ->where(function ($q) use ($id) {
+            $q->where('lpk.no_rawat_layanan', $id)
+              ->orWhere('lpk.no_rawat', $id);
+        })
+        ->orderBy('lpk.tanggal', 'asc')
+        ->select([
+            'rp.no_rawat',
+            'p.no_rkm_medis',
+            'p.nm_pasien',
+            'rp.umurdaftar',
+            'rp.sttsumur',
+            'p.jk',
+            'p.tgl_lahir',
+            'lpk.tanggal',
+            'lpk.no_rawat_layanan',
+            'lkfr.diagnosa_medis',
+            'lkfr.tatalaksana',
+            'lpk.program',
+            'lpk.nip',
+            'pt.nama',
+            'bpk.photo',
+            'lkfr.evaluasi'
+        ])
+        ->get();
+
+    // Group per kombinasi unik layanan
+    $grouped = collect();
+    foreach ($results as $row) {
+        $key = $row->no_rawat_layanan . '|' . $row->tanggal . '|' . $row->program;
+        if (!$grouped->has($key)) {
+            $row->photos = [];
+            $grouped->put($key, $row);
+        }
+        $grouped[$key]->photos[] = $baseUrl . ltrim($row->photo, '/');
+    }
+
+    $data = $grouped->values();
+
+    // Pisahkan jadi 2 array
+    $byNoRawat = $data->filter(fn($item) => $item->no_rawat == $id)->values();
+    $byNoRawatLayanan = $data->filter(fn($item) => $item->no_rawat_layanan == $id)->values();
+
+    // Kalau dua-duanya kosong, return null
+    if ($byNoRawat->isEmpty() && $byNoRawatLayanan->isEmpty()) {
+        return null;
+    }
+
+    return [
+        'byNoRawat' => $byNoRawat,
+        'byNoRawatLayanan' => $byNoRawatLayanan
+    ];
+}
+
+
+
+
+    private function getUjiFungsiKFR($no_rawat)
+    {
+        return DB::table('uji_fungsi_kfr')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+    }
+
+    private function getLayananKedokteranFisikRehabilitasi($no_rawat)
+    {
+        return DB::table('layanan_kedokteran_fisik_rehabilitasi')
+            ->where('no_rawat', $no_rawat)
+            ->orderBy('tanggal', 'asc')
+            ->get();
+    }
+
 
     private function getLaporanTindakan($no_rawat)
     {
