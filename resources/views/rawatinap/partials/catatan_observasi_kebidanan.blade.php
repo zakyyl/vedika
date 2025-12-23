@@ -11,68 +11,63 @@
             </h5>
         </div>
 
-        <div id="collapseObservasiKebidanan" class="collapse" aria-labelledby="headingObservasiKebidanan"
+        <div id="collapseObservasiKebidanan" class="collapse"
+            aria-labelledby="headingObservasiKebidanan"
             data-parent="#accordionObservasiKebidanan">
+
             <div class="card-body p-2">
+
                 @if ($catatanObservasiKebidanan && count($catatanObservasiKebidanan) > 0)
 
-                    @php
-                        $customLabels = [
-                            'td' => 'Tekanan Darah',
-                            'nadi' => 'Nadi',
-                            'spo2' => 'Saturasi Oksigen',
-                            'kesadaran' => 'Kesadaran',
-                            'pernafasan' => 'Pernafasan',
-                            'suhu' => 'Suhu',
-                            'catatan' => 'Catatan Observasi',
-                            // ppv itu
-                        ];
-                        $hiddenFields = ['no_rawat', 'kd_dokter']; 
-                    @endphp
+                    <div style="max-height: 300px; overflow-y: auto;">
 
-                    <div class="accordion" id="observasiKebidananAccordion">
-                        @foreach ($catatanObservasiKebidanan as $index => $item)
-                            @php
-                                $collapseId = 'collapseObservasi' . $index;
-                                $headingId = 'headingObservasi' . $index;
-                            @endphp
-                            <div class="card mb-2">
-                                <div class="card-header py-2 px-3" id="{{ $headingId }}">
-                                    <h6 class="mb-0">
-                                        <button class="btn btn-link btn-sm w-100 text-left collapsed" type="button"
-                                            data-toggle="collapse" data-target="#{{ $collapseId }}"
-                                            aria-expanded="false" aria-controls="{{ $collapseId }}">
-                                            <strong>{{ \Carbon\Carbon::parse($item->tgl_perawatan)->format('d M Y') }}</strong> -
-                                            {{ $item->jam_rawat ?? '-' }}
-                                        </button>
-                                    </h6>
-                                </div>
+                        <table class="table table-bordered table-sm mb-0" style="font-size: 0.8rem;">
+                            <thead class="thead-light text-center">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Jam</th>
+                                    <th>GCS</th>
+                                    <th>TD</th>
+                                    <th>HR</th>
+                                    <th>RR</th>
+                                    <th>Suhu</th>
+                                    <th>SPO2</th>
+                                    <th>Kontraksi</th>
+                                    <th>BJJ</th>
+                                    <th>PPV</th>
+                                    <th>VT</th>
+                                    <th>NIP</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($catatanObservasiKebidanan as $item)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($item->tgl_perawatan)->format('d-m-Y') }}</td>
+                                        <td>{{ $item->jam_rawat }}</td>
+                                        <td>{{ $item->gcs ?? '-' }}</td>
+                                        <td>{{ $item->td ?? '-' }}</td>
+                                        <td>{{ $item->hr ?? '-' }}</td>
+                                        <td>{{ $item->rr ?? '-' }}</td>
+                                        <td>{{ $item->suhu ?? '-' }}</td>
+                                        <td>{{ $item->spo2 ?? '-' }}</td>
+                                        <td>{{ $item->kontraksi ?? '-' }}</td>
+                                        <td>{{ $item->bjj ?? '-' }}</td>
+                                        <td>{{ $item->ppv ?? '-' }}</td>
+                                        <td>{{ $item->vt ?? '-' }}</td>
+                                        <td>{{ $item->nip ?? '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
 
-                                <div id="{{ $collapseId }}" class="collapse"
-                                    aria-labelledby="{{ $headingId }}" data-parent="#observasiKebidananAccordion">
-                                    <div class="card-body p-2">
-                                        <div class="pl-2">
-                                            @foreach ((array) $item as $field => $value)
-                                                @continue(in_array($field, $hiddenFields))
-                                                <div class="d-flex small mb-1">
-                                                    <div class="text-muted" style="min-width: 150px;">
-                                                        {{ $customLabels[$field] ?? ucwords(str_replace('_', ' ', $field)) }}
-                                                    </div>
-                                                    <div class="text-dark">: {{ $value ?? '-' }}</div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
                     </div>
 
                 @else
                     <div class="alert alert-info m-0">
-                        <i class="fas fa-info-circle"></i> Belum ada catatan observasi Kebidanan untuk pasien ini.
+                        <i class="fas fa-info-circle"></i> Belum ada catatan observasi Kebidanan.
                     </div>
                 @endif
+
             </div>
         </div>
     </div>

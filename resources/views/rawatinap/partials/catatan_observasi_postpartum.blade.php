@@ -11,60 +11,45 @@
             </h5>
         </div>
 
-        <div id="collapseObservasiPostpartum" class="collapse" aria-labelledby="headingObservasiPostpartum"
+        <div id="collapseObservasiPostpartum" class="collapse"
+            aria-labelledby="headingObservasiPostpartum"
             data-parent="#accordionObservasiPostpartum">
+
             <div class="card-body p-2">
+
                 @if ($catatanObservasiPostpartum && count($catatanObservasiPostpartum) > 0)
 
-                    @php
-                        $customLabels = [
-                            'td' => 'Tekanan Darah',
-                            'nadi' => 'Nadi',
-                            'spo2' => 'Saturasi Oksigen',
-                            'kesadaran' => 'Kesadaran',
-                            'pernafasan' => 'Pernafasan',
-                            'suhu' => 'Suhu',
-                            
-                        ];
-                        $hiddenFields = ['no_rawat', 'kd_dokter']; 
-                    @endphp
+                    <div style="max-height: 300px; overflow-y: auto;">
 
-                    <div class="accordion" id="observasiPostpartumAccordion">
-                        @foreach ($catatanObservasiPostpartum as $index => $item)
-                            @php
-                                $collapseId = 'collapseObservasi' . $index;
-                                $headingId = 'headingObservasi' . $index;
-                            @endphp
-                            <div class="card mb-2">
-                                <div class="card-header py-2 px-3" id="{{ $headingId }}">
-                                    <h6 class="mb-0">
-                                        <button class="btn btn-link btn-sm w-100 text-left collapsed" type="button"
-                                            data-toggle="collapse" data-target="#{{ $collapseId }}"
-                                            aria-expanded="false" aria-controls="{{ $collapseId }}">
-                                            <strong>{{ \Carbon\Carbon::parse($item->tgl_perawatan)->format('d M Y') }}</strong> -
-                                            {{ $item->jam_rawat ?? '-' }}
-                                        </button>
-                                    </h6>
-                                </div>
+                        <table class="table table-bordered table-sm mb-0" style="font-size: 0.8rem;">
+                            <thead class="thead-light text-center">
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Jam</th>
+                                    <th>Tekanan Darah</th>
+                                    <th>Nadi</th>
+                                    <th>Saturasi Oksigen</th>
+                                    <th>Kesadaran</th>
+                                    <th>Pernafasan</th>
+                                    <th>Suhu</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach ($catatanObservasiPostpartum as $item)
+                                    <tr>
+                                        <td>{{ \Carbon\Carbon::parse($item->tgl_perawatan)->format('d-m-Y') }}</td>
+                                        <td>{{ $item->jam_rawat ?? '-' }}</td>
+                                        <td>{{ $item->td ?? '-' }}</td>
+                                        <td>{{ $item->nadi ?? '-' }}</td>
+                                        <td>{{ $item->spo2 ?? '-' }}</td>
+                                        <td>{{ $item->kesadaran ?? '-' }}</td>
+                                        <td>{{ $item->pernafasan ?? '-' }}</td>
+                                        <td>{{ $item->suhu ?? '-' }}</td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
 
-                                <div id="{{ $collapseId }}" class="collapse"
-                                    aria-labelledby="{{ $headingId }}" data-parent="#observasiPostpartumAccordion">
-                                    <div class="card-body p-2">
-                                        <div class="pl-2">
-                                            @foreach ((array) $item as $field => $value)
-                                                @continue(in_array($field, $hiddenFields))
-                                                <div class="d-flex small mb-1">
-                                                    <div class="text-muted" style="min-width: 150px;">
-                                                        {{ $customLabels[$field] ?? ucwords(str_replace('_', ' ', $field)) }}
-                                                    </div>
-                                                    <div class="text-dark">: {{ $value ?? '-' }}</div>
-                                                </div>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
                     </div>
 
                 @else
@@ -72,6 +57,7 @@
                         <i class="fas fa-info-circle"></i> Belum ada catatan observasi Postpartum untuk pasien ini.
                     </div>
                 @endif
+
             </div>
         </div>
     </div>
