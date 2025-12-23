@@ -116,7 +116,7 @@
                                 {{-- Data Berdasarkan No Rawat --}}
                                 <div id="dataByNoRawat">
                                     @if (!empty($layanan_program_kfr['byNoRawat']) && count($layanan_program_kfr['byNoRawat']))
-                                        @include('partials.kfr-list', ['items' => $layanan_program_kfr['byNoRawat']])
+                                        @include('rawatjalan.partials.kfr-list', ['items' => $layanan_program_kfr['byNoRawat']])
                                     @else
                                         <div class="alert alert-info mb-0" style="font-size: 0.8rem;">
                                             <i class="fas fa-info-circle"></i> Tidak ada data Layanan Program KFR berdasarkan No Rawat.
@@ -127,7 +127,7 @@
                                 {{-- Data Berdasarkan No Rawat Layanan --}}
                                 <div id="dataByNoRawatLayanan" style="display: none;">
                                     @if (!empty($layanan_program_kfr['byNoRawatLayanan']) && count($layanan_program_kfr['byNoRawatLayanan']))
-                                        @include('partials.kfr-list', ['items' => $layanan_program_kfr['byNoRawatLayanan']])
+                                        @include('rawatjalan.partials.kfr-list', ['items' => $layanan_program_kfr['byNoRawatLayanan']])
                                     @else
                                         <div class="alert alert-info mb-0" style="font-size: 0.8rem;">
                                             <i class="fas fa-info-circle"></i> Tidak ada data Layanan Program KFR berdasarkan No Rawat Layanan.
