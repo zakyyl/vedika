@@ -59,6 +59,10 @@
 
             @include('rawatjalan.partials.modal_update')
 
+            @if (!empty($medis_mata))
+                @include('rawatjalan.partials.medismata')
+            @endif
+
             @if (!empty($rawatDr) || !empty($rawatPr) || !empty($rawatDrPr))
                 @include('rawatjalan.partials.tindakan')
             @endif
@@ -71,6 +75,7 @@
             @if (!empty($operasi) || !empty($laporanOperasi))
                 @include('rawatjalan.partials.operasi')
             @endif
+            
             @if (!empty($hasil_radiologi) || !empty($tindakan_radiologi))
                 @include('rawatjalan.partials.radiologi')
             @endif

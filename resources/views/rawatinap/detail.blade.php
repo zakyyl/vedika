@@ -75,6 +75,10 @@
             @if (!empty($catatanObservasiPostpartum))
                 @include('rawatinap.partials.catatan_observasi_postpartum')
             @endif
+
+            @if (!empty($catatanObservasiVentilator))
+                @include('rawatinap.partials.catatan_observasi_ventilator')
+            @endif
             
             @if (!empty($suratKontrol))
                 @include('rawatinap.partials.surat_kontrol')
@@ -86,9 +90,12 @@
                 @include('rawatinap.partials.tindakan')
             @endif
 
-            @if (!empty($laporanOperasi) && $laporanOperasi->count())
+            @if ((!empty($operasi) && $operasi->count()) ||(!empty($laporanOperasi) && $laporanOperasi->count()) ||
+                (!empty($catatanAnestesiSedasi) && $catatanAnestesiSedasi->count())
+            )
                 @include('rawatinap.partials.operasi')
             @endif
+
 
             @if (!empty($tindakan_radiologi) || !empty($hasil_radiologi))
                 @include('rawatinap.partials.radiologi')
