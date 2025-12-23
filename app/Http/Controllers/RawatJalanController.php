@@ -329,6 +329,10 @@ class RawatJalanController extends Controller
 
         $layanan_program_kfr = $this->getLayananProgramKFR($no_rawat);
         // $layanan_program_kfr = $layanan_program_kfr->isEmpty() ? null : $layanan_program_kfr;
+
+        $medis_mata = $this->getMedisMata($no_rawat);
+        // $medis_mata = $medis_mata->isEmpty() ? null : $medis_mata;
+
         
 
         return view('rawatjalan.detail', compact(
@@ -359,7 +363,8 @@ class RawatJalanController extends Controller
             'laporan_tindakan',
             'uji_fungsi_kfr',
             'layanan_kfr',
-            'layanan_program_kfr'
+            'layanan_program_kfr',
+            'medis_mata'
         ));
     }
 
@@ -937,7 +942,7 @@ private function getLayananProgramKFR($id)
 
 
 
-
+    
     public function hapusResume($id)
     {
         $berkas = DB::table('berkas_digital_perawatan')->where('id', $id)->first();
@@ -1058,4 +1063,81 @@ private function getLayananProgramKFR($id)
             'no_rawat' => $no_rawat,
         ]);
     }
+
+    // private function getMedisMata($no_rawat)
+    // {
+    //     return DB::table('penilaian_medis_ralan_mata')
+    //         ->join('dokter', 'dokter.kd_dokter', '=', 'penilaian_medis_ralan_mata.kd_dokter')
+    //         ->where('penilaian_medis_ralan_mata.no_rawat', $no_rawat)
+    //         ->get();
+    // }
+
+//     private function getMedisMata($no_rawat)
+// {
+//     $baseUrl = 'http://192.168.1.33/ERMV1/'; 
+//     // nanti kita gabungkan dengan url_image langsung
+
+//     // Ambil data medis mata
+//     $results = DB::table('penilaian_medis_ralan_mata as pmm')
+//         ->leftJoin('dokter as d', 'd.kd_dokter', '=', 'pmm.kd_dokter')
+//         ->where('pmm.no_rawat', $no_rawat)
+//         ->orderBy('pmm.tanggal', 'asc')
+//         ->select([
+//             'pmm.*',
+//             'd.nm_dokter',
+//         ])
+//         ->get();
+
+//     // Ambil gambar dari tabel asesmen_medis_mata_image_marking
+//     foreach ($results as $row) {
+
+//         $images = DB::table('asesmen_medis_mata_image_marking')
+//             ->where('no_rawat', $row->no_rawat)
+//             ->pluck('url_image')
+//             ->toArray();
+
+//         $row->photos = array_map(function ($file) use ($baseUrl) {
+//             return $baseUrl . ltrim($file, '/');
+//         }, $images);
+//     }
+
+//     return $results->isEmpty() ? null : $results;
+// }
+
+private function getMedisMata($no_rawat)
+{
+    $baseUrl = 'http://192.168.1.33/ERMV1/imagefreehand';
+
+    $results = DB::table('penilaian_medis_ralan_mata as pmm')
+        ->leftJoin('dokter as d', 'd.kd_dokter', '=', 'pmm.kd_dokter')
+        ->where('pmm.no_rawat', $no_rawat)
+        ->orderBy('pmm.tanggal', 'asc')
+        ->select([
+            'pmm.*',
+            'd.nm_dokter',
+        ])
+        ->get();
+
+    foreach ($results as $row) {
+
+        $images = DB::table('asesmen_medis_mata_image_marking')
+            ->where('no_rawat', $row->no_rawat)
+            ->pluck('url_image')
+            ->toArray();
+
+        $row->photos = array_map(function ($file) use ($baseUrl) {
+
+            // --- Bersihkan path ---
+            $clean = trim($file);              // hilangkan spasi
+            $clean = ltrim($clean, '/');       // hilangkan slash depan kalau ada
+
+            // --- Pastikan final URL ---
+            return rtrim($baseUrl, '/') . '/' . $clean;
+
+        }, $images);
+    }
+
+    return $results->isEmpty() ? null : $results;
+}
+
 }
